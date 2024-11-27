@@ -27,6 +27,7 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
 SyncRoo supports multiple storage to persist the file name, size and modified time of the files in the source folder, target folder and the delta, including:
 - SQL Server
 - SQL Server Express LocalDB
+- Sqlite
 
 ## SQL Server Express LocalDB
 If you want to use SQL Server Express LocalDB, which is free to use, you will need to bear in mind the database size limit is 10GB.
