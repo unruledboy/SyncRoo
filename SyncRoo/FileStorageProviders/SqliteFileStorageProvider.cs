@@ -23,25 +23,35 @@ namespace SyncRoo.FileStorageProviders
             using var connection = new SqliteConnection(connectionString);
 
             var result = (await connection.QueryAsync<PendingFileDto>("SELECT * FROM PendingFile WHERE Id > @LastId ORDER BY Id LIMIT @Next OFFSET 0",
-                new { lastId, Next = batchSize })).ToList();
+                new { LastId = lastId, Next = batchSize })).ToList();
 
             return result;
         }
 
         public virtual async Task Initialize(string connectionString, ILogger logger)
         {
-            logger.LogInformation("Initializing for provider {FileStorageProvider}", nameof(SqliteFileStorageProvider));
+            logger.LogInformation("Initializing for provider {FileStorageProvider}...", nameof(SqliteFileStorageProvider));
 
             using var connection = new SqliteConnection(connectionString);
             var sqlText = FileSystemStorage.GetProviderContent($"{nameof(SqliteFileStorageProvider)}.sql");
 
             await connection.ExecuteAsync(sqlText);
 
-            logger.LogInformation("Initialized for provider {FileStorageProvider}", nameof(SqliteFileStorageProvider));
+            logger.LogInformation("Initialized for provider {FileStorageProvider}.", nameof(SqliteFileStorageProvider));
         }
 
         public async Task PrepareFolder(string connectionString, SyncFileMode fileMode, ILogger logger)
-            => await ResetFolder(connectionString, fileMode);
+        {
+            var tableName = fileMode switch
+            {
+                SyncFileMode.Source => "SourceFile",
+                SyncFileMode.Target => "TargetFile",
+                _ => "PendingFile"
+            };
+            using var connection = new SqliteConnection(connectionString);
+
+            await connection.ExecuteAsync($"DELETE FROM {tableName}");
+        }
 
         private static async Task ResetFolder(string connectionString, SyncFileMode fileMode)
         {
@@ -58,7 +68,7 @@ namespace SyncRoo.FileStorageProviders
 
         public async Task Run(AppSyncSettings syncSettings, string connectionString, ILogger logger)
         {
-            await ResetFolder(connectionString, SyncFileMode.Pending);
+            await PrepareFolder(connectionString, SyncFileMode.Pending, logger);
 
             using var connection = new SqliteConnection(connectionString);
 
@@ -120,7 +130,7 @@ namespace SyncRoo.FileStorageProviders
 
             await transaction.CommitAsync();
 
-            logger.LogInformation("Saved {FileCount} files", files.Count);
+            logger.LogInformation("Saved {FileCount} files.", files.Count);
 
             // This is to avoid hogging the CPU
             await Task.Delay(syncSettings.OperationDelayInMs);

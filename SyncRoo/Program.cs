@@ -11,7 +11,6 @@ using SyncRoo.FileStorageProviders;
 using SyncRoo.Interfaces;
 using SyncRoo.Models;
 using SyncRoo.Utils;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace SyncRoo
 {

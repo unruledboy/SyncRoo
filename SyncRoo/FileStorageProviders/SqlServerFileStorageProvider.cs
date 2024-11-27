@@ -32,14 +32,14 @@ namespace SyncRoo.FileStorageProviders
 
         public virtual async Task Initialize(string connectionString, ILogger logger)
         {
-            logger.LogInformation("Initializing for provider {FileStorageProvider}", nameof(SqlServerFileStorageProvider));
+            logger.LogInformation("Initializing for provider {FileStorageProvider}...", nameof(SqlServerFileStorageProvider));
 
             using var connection = new SqlConnection(connectionString);
             var sqlText = FileSystemStorage.GetProviderContent($"{nameof(SqlServerFileStorageProvider)}.sql");
 
             await connection.ExecuteAsync(sqlText);
 
-            logger.LogInformation("Initialized for provider {FileStorageProvider}", nameof(SqlServerFileStorageProvider));
+            logger.LogInformation("Initialized for provider {FileStorageProvider}...", nameof(SqlServerFileStorageProvider));
         }
 
         public async Task PrepareFolder(string connectionString, SyncFileMode fileMode, ILogger logger)
@@ -98,7 +98,7 @@ namespace SyncRoo.FileStorageProviders
 
             await connection.ExecuteAsync($"EXEC dbo.{sp} @Files", sqlParameters, commandTimeout: syncSettings.CommandTimeoutInSeconds);
 
-            logger.LogInformation("Saved {FileCount} files", files.Count);
+            logger.LogInformation("Saved {FileCount} files.", files.Count);
 
             // This is to avoid hogging the CPU
             await Task.Delay(syncSettings.OperationDelayInMs);

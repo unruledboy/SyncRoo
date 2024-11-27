@@ -50,6 +50,11 @@ namespace SyncRoo.Core
         {
             var batchFiles = await GenerateBatchFiles();
 
+            if (batchFiles.Count == 0)
+            {
+                logger.LogInformation("No batch files generated.");
+            }
+
             Parallel.ForEach(batchFiles, new ParallelOptions
             {
                 MaxDegreeOfParallelism = commandOptions.MultiThreads,
@@ -60,7 +65,7 @@ namespace SyncRoo.Core
 
                 Process.Start(file);
 
-                logger.LogInformation("Ran batch file {BatchFile}", file);
+                logger.LogInformation("Ran batch file {BatchFile}.", file);
             });
         }
 
@@ -97,6 +102,11 @@ namespace SyncRoo.Core
             var batchFileCount = 0;
             var pendingFileCount = await fileStorageProvider.GetPendingFileCount(commandOptions.DatabaseConnectionString);
 
+            if (pendingFileCount == 0)
+            {
+                logger.LogInformation("No pending file found.");
+            }
+
             for (var i = 0; i < pendingFileCount / syncSettings.FileBatchSize + 1; i++)
             {
                 var batchId = i + 1;
@@ -127,10 +137,10 @@ namespace SyncRoo.Core
                 batchFiles.Add(batchFile);
                 batchFileCount++;
 
-                logger.LogInformation("Generated file batch {BatchId}: {BatchFile}, totally {BatchFileCount} batch files", batchId, batchFile, batchFileCount);
+                logger.LogInformation("Generated file batch {BatchId}: {BatchFile}, totally {BatchFileCount} batch files.", batchId, batchFile, batchFileCount);
             }
 
-            logger.LogInformation("Generated {BatchFileCount} batch files", batchFileCount);
+            logger.LogInformation("Generated {BatchFileCount} batch files.", batchFileCount);
 
             return batchFiles;
         }
@@ -141,7 +151,7 @@ namespace SyncRoo.Core
 
             await fileStorageProvider.Run(syncSettings, commandOptions.DatabaseConnectionString, logger);
 
-            logger.LogInformation("Processed pending files");
+            logger.LogInformation("Processed pending files.");
         }
 
         private async Task ScanFiles(string rootFolder, SyncFileMode fileMode)
@@ -179,7 +189,7 @@ namespace SyncRoo.Core
                 pendingFiles.Clear();
             }
 
-            logger.LogInformation("Scanned {FileMode} files", fileMode);
+            logger.LogInformation("Scanned {FileMode} files.", fileMode);
         }
     }
 }
