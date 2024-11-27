@@ -42,10 +42,10 @@ namespace SyncRoo.FileStorageProviders
             logger.LogInformation("Initialized for provider {FileStorageProvider}...", nameof(SqlServerFileStorageProvider));
         }
 
-        public async Task PrepareFolder(string connectionString, SyncFileMode fileMode, ILogger logger)
-            => await ResetFolder(connectionString, fileMode);
+        public async Task PrepareFileStorage(string connectionString, SyncFileMode fileMode, ILogger logger)
+            => await ClearnupFileStorage(connectionString, fileMode);
 
-        private static async Task ResetFolder(string connectionString, SyncFileMode fileMode)
+        private static async Task ClearnupFileStorage(string connectionString, SyncFileMode fileMode)
         {
             var tableName = fileMode switch
             {
@@ -60,7 +60,7 @@ namespace SyncRoo.FileStorageProviders
 
         public async Task Run(AppSyncSettings syncSettings, string connectionString, ILogger logger)
         {
-            await ResetFolder(connectionString, SyncFileMode.Pending);
+            await ClearnupFileStorage(connectionString, SyncFileMode.Pending);
 
             using var connection = new SqlConnection(connectionString);
 
@@ -106,9 +106,13 @@ namespace SyncRoo.FileStorageProviders
 
         public virtual async Task Teardown(string connectionString, ILogger logger)
         {
-            await ResetFolder(connectionString, SyncFileMode.Source);
-            await ResetFolder(connectionString, SyncFileMode.Target);
-            await ResetFolder(connectionString, SyncFileMode.Pending);
+            await ClearnupFileStorage(connectionString, SyncFileMode.Source);
+            await ClearnupFileStorage(connectionString, SyncFileMode.Target);
+            await ClearnupFileStorage(connectionString, SyncFileMode.Pending);
+
+            using var connection = new SqlConnection(connectionString);            
+
+            await connection.ExecuteAsync($"DBCC SHRINKDATABASE ([{connection.Database}])");
         }
     }
 }

@@ -161,7 +161,7 @@ namespace SyncRoo.Core
 
             logger.LogInformation("Scanning {FileMode} files...", fileMode);
 
-            await fileStorageProvider.PrepareFolder(commandOptions.DatabaseConnectionString, fileMode, logger);
+            await fileStorageProvider.PrepareFileStorage(commandOptions.DatabaseConnectionString, fileMode, logger);
 
             foreach (var file in Directory.EnumerateFiles(rootFolder))
             {

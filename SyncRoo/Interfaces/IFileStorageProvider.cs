@@ -10,7 +10,7 @@ namespace SyncRoo.Interfaces
 
         Task Teardown(string connectionString, ILogger logger);
 
-        Task PrepareFolder(string connectionString, SyncFileMode fileMode, ILogger logger);
+        Task PrepareFileStorage(string connectionString, SyncFileMode fileMode, ILogger logger);
 
         Task Save(AppSyncSettings syncSettings, string connectionString, List<FileDto> files, SyncFileMode fileMode, ILogger logger);
 
