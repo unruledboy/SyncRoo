@@ -11,9 +11,12 @@ namespace SyncRoo.Core
     public class Engine(CommandOptions commandOptions, IOptions<AppSyncSettings> syncSettings, IFileStorageProvider fileStorageProvider, ILogger logger)
     {
         private readonly AppSyncSettings syncSettings = syncSettings.Value;
+        private readonly SyncReport syncReport = new();
 
         public async Task Sync()
         {
+            syncReport.StartedTime = DateTime.Now;
+
             await fileStorageProvider.Initialize(commandOptions.DatabaseConnectionString, logger);
 
             if (!string.IsNullOrWhiteSpace(commandOptions.Operation))
@@ -44,6 +47,23 @@ namespace SyncRoo.Core
             {
                 await fileStorageProvider.Teardown(commandOptions.DatabaseConnectionString, logger);
             }
+
+            syncReport.FinishedTime = DateTime.Now;
+
+            ProduceReport();
+        }
+
+        private void ProduceReport()
+        {
+            logger.LogInformation("Sync report");
+            logger.LogInformation("\tStart time: {StartTime}", syncReport.StartedTime);
+            logger.LogInformation("\tFinish time: {FinishTime}", syncReport.FinishedTime);
+            logger.LogInformation("\tDuration: {Duration}", syncReport.Timer.Elapsed.ToString());
+            // TODO:
+            logger.LogInformation("\tSource file count: {SourceFileCount}", syncReport.SourceFileCount);
+            logger.LogInformation("\tTarget file count: {TargetFileCount}", syncReport.TargetFileCount);
+            logger.LogInformation("\tProcessed file count: {ProcessedFileCount}", syncReport.ProcessedFileCount);
+            logger.LogInformation("\tProcessed file size: {ProcessedFileSize}", FileUtils.FormatSize(syncReport.ProcessedFileBytes));
         }
 
         private async Task GenerateAndRunBatchFiles()
@@ -59,19 +79,28 @@ namespace SyncRoo.Core
             {
                 MaxDegreeOfParallelism = commandOptions.MultiThreads,
                 TaskScheduler = TaskScheduler.Default
-            }, file =>
+            }, batchFile =>
             {
-                logger.LogInformation("Running batch file {BatchFile}...", file);
+                try
+                {
+                    logger.LogInformation("Running batch file {BatchFile}...", batchFile);
 
-                var process = new Process();
-                process.StartInfo.FileName = file;
-                process.StartInfo.ErrorDialog = true;
-                process.StartInfo.CreateNoWindow = false;
-                process.StartInfo.UseShellExecute = false;
-                process.Start();
-                process.WaitForExit(TimeSpan.FromSeconds(syncSettings.ProcessTimeoutInSeconds));
+                    var process = new Process();
+                    process.StartInfo.FileName = batchFile;
+                    process.StartInfo.ErrorDialog = true;
+                    process.StartInfo.CreateNoWindow = false;
+                    process.StartInfo.UseShellExecute = false;
+                    process.Start();
+                    process.WaitForExit(TimeSpan.FromSeconds(syncSettings.ProcessTimeoutInSeconds));
 
-                logger.LogInformation("Ran batch file {BatchFile}.", file);
+                    batchFile.SafeDelete();
+
+                    logger.LogInformation("Ran batch file {BatchFile}.", batchFile);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Failed to run batch file {BatchFile}", batchFile);
+                }
             });
         }
 
