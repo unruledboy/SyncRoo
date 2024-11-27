@@ -63,7 +63,13 @@ namespace SyncRoo.Core
             {
                 logger.LogInformation("Running batch file {BatchFile}...", file);
 
-                Process.Start(file);
+                var process = new Process();
+                process.StartInfo.FileName = file;
+                process.StartInfo.ErrorDialog = true;
+                process.StartInfo.CreateNoWindow = false;
+                process.StartInfo.UseShellExecute = false;
+                process.Start();
+                process.WaitForExit(TimeSpan.FromSeconds(syncSettings.ProcessTimeoutInSeconds));
 
                 logger.LogInformation("Ran batch file {BatchFile}.", file);
             });
