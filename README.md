@@ -23,17 +23,34 @@ RoboCopy took over 4 days to work out the delta and started to copy the first fi
 
 SyncRoo took 30 minutes to find the delta file list, which is over 200 times faster than RoboCopy.
 
+## Tech stack
+It's primary .NET stack:
+- .NET 8 with C# 12
+- Dapper: for data access
+- FastMember: for fast POCO to database for SQL Server to do bulk insert
+- Serilog: logging, currently only log to the console
+- CommandLineParser: command line options
+
 ## Storage Providers
 SyncRoo supports multiple storage to persist the file name, size and modified time of the files in the source folder, target folder and the delta, including:
 - SQL Server
 - SQL Server Express LocalDB
 - Sqlite
 
-## SQL Server Express LocalDB
+### SQL Server
+If you have an existing SQL Server, you can use that and specify the connection string in the appsettings.json file.
+
+If you would like to use a free version, you could download the latest version [SQL Server Express here](https://www.microsoft.com/en-au/sql-server/sql-server-downloads)
+
+### SQL Server Express LocalDB
 If you want to use SQL Server Express LocalDB, which is free to use, you will need to bear in mind the database size limit is 10GB.
 
 If the total number of files including the source, the target and the delta are large, for example, over 50M, then it's highly likely it will exceed the 10GB size limit.
 
-To download the latest version (2022), please click [SQL Server 2022 Express LocalDB](https://download.microsoft.com/download/3/8/d/38de7036-2433-4207-8eae-06e247e17b25/SqlLocalDB.msi).
+To download the latest version (currently 2022), please click [SQL Server 2022 Express LocalDB](https://download.microsoft.com/download/3/8/d/38de7036-2433-4207-8eae-06e247e17b25/SqlLocalDB.msi).
 
 To isntall, follow the steps of the installation wizard.
+
+
+### Sqlite
+Sqlite is shipped with SyncRoo.
