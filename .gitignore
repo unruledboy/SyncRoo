@@ -1,0 +1,10 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/SyncRoo/bin
+/SyncRoo/obj/Debug/net8.0
+/SyncRoo/obj/Release/net8.0
+/SyncRoo/obj
+/SyncRoo/appsettings.local.json
