@@ -66,17 +66,24 @@ namespace SyncRoo.Core
 
         private async Task<List<string>> GenerateBatchFiles()
         {
+            const string DefaultBatchFolder = "Batch";
             using var connection = new SqlConnection(commandOptions.DatabaseConnectionString);
+            var batchFolder = commandOptions.BatchFolder;
 
-            logger.LogInformation("Generating batch files in {BatchFolder}...", commandOptions.BatchFolder);
-
-            if (!Directory.Exists(commandOptions.BatchFolder))
+            if (string.IsNullOrWhiteSpace(batchFolder))
             {
-                Directory.CreateDirectory(commandOptions.BatchFolder);
+                batchFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DefaultBatchFolder);
             }
 
+            if (!Directory.Exists(batchFolder))
+            {
+                Directory.CreateDirectory(batchFolder);
+            }
+
+            logger.LogInformation("Generating batch files in {BatchFolder}...", batchFolder);
+
             var runId = DateTime.Now.ToString("yyyMMdd-HHmmss");
-            var batchRunFolder = Path.Combine(commandOptions.BatchFolder, runId);
+            var batchRunFolder = Path.Combine(batchFolder, runId);
 
             if (!Directory.Exists(batchRunFolder))
             {

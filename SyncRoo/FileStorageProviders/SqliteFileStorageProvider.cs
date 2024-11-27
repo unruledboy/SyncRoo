@@ -33,7 +33,7 @@ namespace SyncRoo.FileStorageProviders
             logger.LogInformation("Initializing for provider {FileStorageProvider}", nameof(SqliteFileStorageProvider));
 
             using var connection = new SqliteConnection(connectionString);
-            var sqlText = FileSystemStorage.GetProviderContent(nameof(SqliteFileStorageProvider));
+            var sqlText = FileSystemStorage.GetProviderContent($"{nameof(SqliteFileStorageProvider)}.sql");
 
             await connection.ExecuteAsync(sqlText);
 
@@ -78,6 +78,8 @@ namespace SyncRoo.FileStorageProviders
             }
 
             using var connection = new SqliteConnection(connectionString);
+            await connection.OpenAsync();
+
             using var transaction = await connection.BeginTransactionAsync();
             using var command = connection.CreateCommand();
 

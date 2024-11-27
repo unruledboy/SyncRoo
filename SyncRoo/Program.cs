@@ -3,12 +3,14 @@ using CommandLine;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
 using SyncRoo.Core;
 using SyncRoo.FileStorageProviders;
 using SyncRoo.Interfaces;
 using SyncRoo.Models;
+using SyncRoo.Utils;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace SyncRoo
@@ -27,7 +29,7 @@ namespace SyncRoo
             var parserResult = Parser.Default.ParseArguments<CommandOptions>(args);
 
             var configuration = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile("appsettings.release.json", optional: true, reloadOnChange: true)
                 .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
@@ -43,14 +45,18 @@ namespace SyncRoo
                 {
                     services.AddSingleton<IConfiguration>(configuration);
 
-                    switch (configuration["Sync:FilStorageProvider"])
+                    switch (configuration["Sync:FilStorageProvider"]?.ToLowerInvariant())
                     {
+                        case StorageProviders.Sqlite:
+                            services.AddSingleton<IFileStorageProvider, SqliteFileStorageProvider>();
+                            break;
                         default:
                             services.AddSingleton<IFileStorageProvider, SqlServerFileStorageProvider>();
                             break;
                     }
 
                     services.Configure<AppSyncSettings>(configuration.GetSection("Sync"));
+                    services.AddLogging(builder => builder.AddSerilog(dispose: true));
                 })
                 .UseSerilog((context, configuration) =>
                 {
@@ -71,7 +77,7 @@ namespace SyncRoo
                                 return;
                             }
 
-                            var logger = host.Services.GetService<ILogger>();
+                            var logger = host.Services.GetService<ILogger<Engine>>();
                             var syncSettings = host.Services.GetService<IOptions<AppSyncSettings>>();
                             var fileStorageProvider = host.Services.GetService<IFileStorageProvider>();
                             var engine = new Engine(opts, syncSettings, fileStorageProvider, logger);
@@ -91,7 +97,8 @@ namespace SyncRoo
 
         private static bool ValidateOptions(CommandOptions opts, IConfiguration configuration)
         {
-            var databaseConnectionString = configuration.GetConnectionString(nameof(CommandOptions.DatabaseConnectionString));
+            const string ConnectionStringDatabase = "Database";
+            var databaseConnectionString = configuration.GetConnectionString(ConnectionStringDatabase);
 
             if (!string.IsNullOrWhiteSpace(opts.DatabaseConnectionString))
             {

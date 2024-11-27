@@ -1,14 +1,15 @@
-﻿CREATE TYPE [dbo].[FileType] AS TABLE(
-	[FileName] [nvarchar](450) NOT NULL,
-	[Size] [bigint] NOT NULL,
-	[ModifiedTime] [datetime2](7) NOT NULL
-)
+﻿IF NOT EXISTS (SELECT NULL FROM sys.types t INNER JOIN sys.schemas s on (t.schema_id = s.schema_id) where s.name = 'dbo' and t.name = 'FileType')
+BEGIN
+	CREATE TYPE [dbo].[FileType] AS TABLE(
+		[FileName] [nvarchar](450) NOT NULL,
+		[Size] [bigint] NOT NULL,
+		[ModifiedTime] [datetime2](7) NOT NULL
+	)
+END
 GO
 
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
+IF NOT EXISTS (SELECT NULL FROM sys.tables t INNER JOIN sys.schemas s on (t.schema_id = s.schema_id) where s.name = 'dbo' and t.name = 'PendingFile')
+BEGIN
 CREATE TABLE [dbo].[PendingFile](
 	[Id] [bigint] IDENTITY(1,1) NOT NULL,
 	[FileName] [nvarchar](450) NOT NULL,
@@ -18,13 +19,12 @@ PRIMARY KEY CLUSTERED
 (
 	[Id] ASC
 )
-) ON [PRIMARY]
+)
+END
 GO
 
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
+IF NOT EXISTS (SELECT NULL FROM sys.tables t INNER JOIN sys.schemas s on (t.schema_id = s.schema_id) where s.name = 'dbo' and t.name = 'SourceFile')
+BEGIN
 CREATE TABLE [dbo].[SourceFile](
 	[FileName] [nvarchar](450) NOT NULL,
 	[Size] [bigint] NOT NULL,
@@ -34,12 +34,11 @@ CREATE TABLE [dbo].[SourceFile](
 	[FileName] ASC
 )
 ) ON [PRIMARY]
+END
 GO
 
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
+IF NOT EXISTS (SELECT NULL FROM sys.tables t INNER JOIN sys.schemas s on (t.schema_id = s.schema_id) where s.name = 'dbo' and t.name = 'TargetFile')
+BEGIN
 CREATE TABLE [dbo].[TargetFile](
 	[FileName] [nvarchar](450) NOT NULL,
 	[Size] [bigint] NOT NULL,
@@ -49,18 +48,10 @@ CREATE TABLE [dbo].[TargetFile](
 	[FileName] ASC
 )
 ) ON [PRIMARY]
+END
 GO
 
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
-
-
-
-
-CREATE PROCEDURE [dbo].[usp_AddPendingFiles]
+CREATE OR ALTER PROCEDURE [dbo].[usp_AddPendingFiles]
 AS
 BEGIN
 
@@ -69,17 +60,9 @@ BEGIN
 			LEFT OUTER JOIN dbo.TargetFile tf ON sf.FileName = tf.FileName
 			WHERE tf.FileName IS NULL OR sf.Size <> tf.Size OR sf.ModifiedTime > tf.ModifiedTime
 END		
-
-
-GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
 GO
 
-
-
-CREATE PROCEDURE [dbo].[usp_AddSourceFiles]
+CREATE OR ALTER PROCEDURE [dbo].[usp_AddSourceFiles]
 	@Files dbo.FileType READONLY
 AS
 BEGIN
@@ -95,14 +78,9 @@ BEGIN
 
 END
 GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 
-
-CREATE PROCEDURE [dbo].[usp_AddTargetFiles]
+CREATE OR ALTER PROCEDURE [dbo].[usp_AddTargetFiles]
 	@Files dbo.FileType READONLY
 AS
 BEGIN

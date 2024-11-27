@@ -11,7 +11,7 @@
     {
         public const string SqlServer = "sqlserver";
         public const string SqlServerLocalDB = "localdb";
-
+        public const string Sqlite = "sqlite";
     }
 
     public enum SyncFileMode
