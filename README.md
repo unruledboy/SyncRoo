@@ -1,5 +1,5 @@
 ## SyncRoo
-SyncRoo can quickly synchronize files between devices. It's a lot quicker than RoboCopy in subsequent delta syncs.
+SyncRoo can quickly synchronize files between devices. It's a lot quicker than Robocopy in subsequent delta syncs.
 
 Currently it only supports Windows devices.
 
@@ -19,9 +19,9 @@ The number of test sample files is 14 million. The source folder have 14 million
 
 The hardware is i5-13600K CPU + AData Legend 800 3.5GB/s SSD.
 
-RoboCopy took over 4 days to work out the delta and started to copy the first file.
+Robocopy took over 4 days to work out the delta and started to copy the first file.
 
-SyncRoo took 30 minutes to find the delta file list, which is over 200 times faster than RoboCopy.
+SyncRoo took 30 minutes to find the delta file list, which is over 200 times faster than Robocopy.
 
 ## Usage
 
