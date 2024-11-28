@@ -12,3 +12,6 @@
 *.user
 /EverythingSZ/bin/Debug/netstandard2.0
 /EverythingSZ/obj
+/EverythingSZ/bin/Release/netstandard2.0
+/SyncRoo/Properties/launchSettings.json
+/SyncRoo/Properties/launchSettings.json

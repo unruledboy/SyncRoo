@@ -138,3 +138,6 @@ If the total number of files including the source, the target and the delta are 
 To download the latest version (currently 2022), please click [SQL Server 2022 Express LocalDB](https://download.microsoft.com/download/3/8/d/38de7036-2433-4207-8eae-06e247e17b25/SqlLocalDB.msi).
 
 To isntall, follow the steps of the installation wizard.
+
+## ToDos
+- Add support for file patterns

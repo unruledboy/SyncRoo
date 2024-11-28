@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "SyncRoo": {
-      "commandName": "Project",
-      "commandLineArgs": "-s \"D:\\Workspaces\\SearchX\\Data-backup\\Thumbnails\" -t \"D:\\Workspaces\\SearchX\\Data-backup\\Thumbnails-SyncTest\" -b \"C:\\Temp\\BatchTests\""
-    }
-  }
-}

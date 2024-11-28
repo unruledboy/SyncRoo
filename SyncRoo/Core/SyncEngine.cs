@@ -65,7 +65,11 @@ namespace SyncRoo.Core
                 return false;
             }
 
-            profile = JsonSerializer.Deserialize<ProfileDto>(File.ReadAllText(commandOptions.Profile));
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+            profile = JsonSerializer.Deserialize<ProfileDto>(File.ReadAllText(commandOptions.Profile), jsonOptions);
 
             if (profile == null)
             {
@@ -81,10 +85,13 @@ namespace SyncRoo.Core
                 return false;
             }
 
-            if (profile.Tasks.Exists(x => string.IsNullOrWhiteSpace(x.SourceFolder) || !File.Exists(x.SourceFolder)))
+            var foldersDoNotExist = profile.Tasks.Where(x => string.IsNullOrWhiteSpace(x.SourceFolder) || !Directory.Exists(x.SourceFolder)).ToList();
+            if (foldersDoNotExist.Count > 0)
             {
-                logger.LogError("All source folders must exist.");
-
+                foreach (var folder in foldersDoNotExist)
+                {
+                    logger.LogError("Source folder does exist: {RootFolder}", folder);
+                }
                 return false;
             }
 

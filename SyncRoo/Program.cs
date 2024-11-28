@@ -73,13 +73,13 @@ namespace SyncRoo
                         async opts =>
                         {
                             var configuration = host.Services.GetService<IConfiguration>();
+                            var logger = host.Services.GetService<ILogger<SyncEngine>>();
 
-                            if (!ValidateOptions(opts, configuration))
+                            if (!ValidateOptions(opts, configuration, logger))
                             {
                                 return;
                             }
 
-                            var logger = host.Services.GetService<ILogger<SyncEngine>>();
                             var syncSettings = host.Services.GetService<IOptions<AppSyncSettings>>();
                             var fileStorageProvider = host.Services.GetService<IFileStorageProvider>();
                             var fileSourceProviders = host.Services.GetService<IEnumerable<IFileSourceProvider>>();
@@ -98,10 +98,16 @@ namespace SyncRoo
             Log.Information("Run finished");
         }
 
-        private static bool ValidateOptions(CommandOptions opts, IConfiguration configuration)
+        private static bool ValidateOptions(CommandOptions opts, IConfiguration configuration, ILogger<SyncEngine> logger)
         {
             const string ConnectionStringDatabase = "Database";
             var databaseConnectionString = configuration.GetConnectionString(ConnectionStringDatabase);
+
+            if (string.IsNullOrWhiteSpace(opts.SourceFolder) && string.IsNullOrWhiteSpace(opts.TargetFolder) && string.IsNullOrWhiteSpace(opts.Profile))
+            {
+                logger.LogError("Please either provide the source/target folders, or the profile file.");
+                return false;
+            }
 
             if (!string.IsNullOrWhiteSpace(opts.DatabaseConnectionString))
             {
