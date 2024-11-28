@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SyncRoo.Interfaces;
 using SyncRoo.Models;
+using SyncRoo.Models.Dtos;
 using SyncRoo.Utils;
 
 namespace SyncRoo.Core
@@ -58,8 +59,7 @@ namespace SyncRoo.Core
             logger.LogInformation("Sync report");
             logger.LogInformation("\tStart time: {StartTime}", syncReport.StartedTime);
             logger.LogInformation("\tFinish time: {FinishTime}", syncReport.FinishedTime);
-            logger.LogInformation("\tDuration: {Duration}", syncReport.Timer.Elapsed.ToString());
-            // TODO:
+            logger.LogInformation("\tDuration: {Duration}", syncReport.Timer.Elapsed.ToReadableTimespan());
             logger.LogInformation("\tSource file count: {SourceFileCount}", syncReport.SourceFileCount);
             logger.LogInformation("\tTarget file count: {TargetFileCount}", syncReport.TargetFileCount);
             logger.LogInformation("\tProcessed file count: {ProcessedFileCount}", syncReport.ProcessedFileCount);
@@ -184,7 +184,10 @@ namespace SyncRoo.Core
         {
             logger.LogInformation("Processing pending files...");
 
-            await fileStorageProvider.Run(syncSettings, commandOptions.DatabaseConnectionString, logger);
+            var result = await fileStorageProvider.Run(syncSettings, commandOptions.DatabaseConnectionString, logger);
+            
+            syncReport.ProcessedFileCount = result.FileCount;
+            syncReport.ProcessedFileBytes = result.FileBytes;
 
             logger.LogInformation("Processed pending files.");
         }
@@ -192,7 +195,7 @@ namespace SyncRoo.Core
         private async Task ScanFiles(string rootFolder, SyncFileMode fileMode)
         {
             var pendingFiles = new List<FileDto>();
-            var totalFileCount = 0;
+            var totalFileCount = 0L;
 
             logger.LogInformation("Scanning {FileMode} files...", fileMode);
 
@@ -225,6 +228,16 @@ namespace SyncRoo.Core
             }
 
             logger.LogInformation("Scanned {FileMode} files.", fileMode);
+
+            switch (fileMode)
+            {
+                case SyncFileMode.Source:
+                    syncReport.SourceFileCount = totalFileCount;
+                    break;
+                case SyncFileMode.Target:
+                    syncReport.TargetFileCount = totalFileCount;
+                    break;
+            }
         }
     }
 }

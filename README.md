@@ -23,6 +23,28 @@ RoboCopy took over 4 days to work out the delta and started to copy the first fi
 
 SyncRoo took 30 minutes to find the delta file list, which is over 200 times faster than RoboCopy.
 
+## Usage
+
+```text
+  -s, --Source          Required. The source folder where the files to be copied from.
+
+  -t, --Target          Required. The target folder where the files to be copied to.
+
+  -b, --Batch           Required. The intermediate folder for the file copy batch commands to be stored.
+
+  -o, --Operation       A specific operation to be run rather than the whole sync process.
+
+  -m, --MultiThreads    (Default: 1) The number of threads the process will use to concurrenctly copy the files.
+
+  -d, --Database        The database connection string.
+
+  -a, --AutoTeardown    (Default: false) Automatically teardown intermediate resources.
+
+  --help                Display this help screen.
+
+  --version             Display version information.
+```
+
 ## Tech stack
 It's primary .NET stack:
 - .NET 8 with C# 12

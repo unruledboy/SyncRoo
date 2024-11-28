@@ -5,6 +5,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using SyncRoo.Interfaces;
 using SyncRoo.Models;
+using SyncRoo.Models.Dtos;
 using SyncRoo.Utils;
 
 namespace SyncRoo.FileStorageProviders
@@ -58,13 +59,15 @@ namespace SyncRoo.FileStorageProviders
             await connection.ExecuteAsync($"TRUNCATE TABLE dbo.{tableName}");
         }
 
-        public async Task Run(AppSyncSettings syncSettings, string connectionString, ILogger logger)
+        public async Task<FileStatDto> Run(AppSyncSettings syncSettings, string connectionString, ILogger logger)
         {
             await ClearnupFileStorage(connectionString, SyncFileMode.Pending);
 
             using var connection = new SqlConnection(connectionString);
 
-            await connection.ExecuteAsync("EXEC dbo.usp_AddPendingFiles", commandTimeout: syncSettings.CommandTimeoutInSeconds);
+            var result = await connection.QueryFirstAsync<FileStatDto>("EXEC dbo.usp_AddPendingFiles", commandTimeout: syncSettings.CommandTimeoutInSeconds);
+
+            return result;
         }
 
         public async Task Save(AppSyncSettings syncSettings, string connectionString, List<FileDto> files, SyncFileMode fileMode, ILogger logger)

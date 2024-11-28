@@ -1,4 +1,4 @@
-﻿namespace SyncRoo.Models
+﻿namespace SyncRoo.Models.Dtos
 {
     public class PendingFileDto : FileDto
     {

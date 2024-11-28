@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using SyncRoo.Models;
+using SyncRoo.Models.Dtos;
 using SyncRoo.Utils;
 
 namespace SyncRoo.Interfaces
@@ -14,7 +15,7 @@ namespace SyncRoo.Interfaces
 
         Task Save(AppSyncSettings syncSettings, string connectionString, List<FileDto> files, SyncFileMode fileMode, ILogger logger);
 
-        Task Run(AppSyncSettings syncSettings, string connectionString, ILogger logger);
+        Task<FileStatDto> Run(AppSyncSettings syncSettings, string connectionString, ILogger logger);
 
         Task<long> GetPendingFileCount(string connectionString);
 
