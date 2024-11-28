@@ -42,6 +42,8 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
 
   -a, --AutoTeardown    (Default: false) Automatically teardown intermediate resources.
 
+  -n, --UsnJournal      (Default: false) Use NTFS USN Journal to quickly search for files but this may use large volume of memory depending on the number of files on the drives.
+
   -p, --Profile         (Default: false) A profile file where you can define a series of source/target folders to be synced repeatedly.
 
   --help                Display this help screen.
@@ -87,6 +89,23 @@ Then you can provide the profile file via `-p` parameter, like below:
 SyncRoo -p "D:\MySyncRooTasks\DailySync.json"
 ```
 
+### NTFS USN Journal Command
+NTFS tracks changes to the file system and store the info on the MFT. We can quickly search matching files on an NTFS USN Journal enabled drive.
+
+> [!NOTE]
+> Only fixed drive with NTFS file system enabled supports this feature. Mapped network drives and UNC paths do not support this.
+
+> [!IMPORTANT]
+> You will need to run SyncRoo with elevated access (aka. run as administrator), otherwise it will not work.
+
+> [!WARNING]
+> SyncRoo will need to preload all the files on the fixed drives so that the result can be shared within all subsequent searches, and that can take some time, and potentially a lot of memory.
+
+To enable the support for USN Journal, specify the `-n` parameter, like below:
+```bat
+SyncRoo -s "D:\MyPictures\Favorites" -t "Z:\Backup\Pictures\Favorites" -n
+```
+
 ## Tech Stack
 It's primary .NET stack:
 - .NET 8 with C# 12
@@ -95,6 +114,7 @@ It's primary .NET stack:
 - Serilog: logging, currently only log to the console
 - CommandLineParser: command line options
 - Microsoft.Data.Sqlite: ADO.NET driver for Sqlite
+- NTFS USN Journal: credit goes to [EverythingSZ](https://github.com/yuanrui/EverythingSZ)
 
 ## Storage Providers
 SyncRoo supports multiple storage to persist the file name, size and modified time of the files in the source folder, target folder and the delta, including:

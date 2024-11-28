@@ -14,6 +14,12 @@
         public const string Sqlite = "sqlite";
     }
 
+    public static class SourceProviders
+    {
+        public const string Native = "Native";
+        public const string UsnJournal = "USN";
+    }
+
     public enum SyncFileMode
     {
         None = 0,

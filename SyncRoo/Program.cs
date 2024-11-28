@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
 using SyncRoo.Core;
+using SyncRoo.FileSourceProviders;
 using SyncRoo.FileStorageProviders;
 using SyncRoo.Interfaces;
 using SyncRoo.Models;
@@ -43,6 +44,8 @@ namespace SyncRoo
                 .ConfigureServices((x, services) =>
                 {
                     services.AddSingleton<IConfiguration>(configuration);
+                    services.AddSingleton<IFileSourceProvider, NativeFileSourceProvider>();
+                    services.AddSingleton<IFileSourceProvider, NtfsUsnJournalFileSourceProvider>();
 
                     switch (configuration["Sync:FilStorageProvider"]?.ToLowerInvariant())
                     {
@@ -76,12 +79,13 @@ namespace SyncRoo
                                 return;
                             }
 
-                            var logger = host.Services.GetService<ILogger<Engine>>();
+                            var logger = host.Services.GetService<ILogger<SyncEngine>>();
                             var syncSettings = host.Services.GetService<IOptions<AppSyncSettings>>();
                             var fileStorageProvider = host.Services.GetService<IFileStorageProvider>();
-                            var engine = new Engine(opts, syncSettings, fileStorageProvider, logger);
+                            var fileSourceProviders = host.Services.GetService<IEnumerable<IFileSourceProvider>>();
+                            var syncEngine = new SyncEngine(opts, syncSettings, fileStorageProvider, fileSourceProviders, logger);
 
-                            await engine.Sync();
+                            await syncEngine.Sync();
                         },
                 async errors => await HandleParserError(errors)
                 );

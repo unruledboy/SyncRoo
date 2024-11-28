@@ -25,6 +25,9 @@ namespace SyncRoo.Models
         [Option('a', "AutoTeardown", Required = false, HelpText = "Automatically teardown intermediate resources.", Default = false)]
         public bool AutoTeardown { get; set; }
 
+        [Option('n', "UsnJournal", Required = false, HelpText = "Use NTFS USN Journal to quickly search for files but this may use large volume of memory depending on the number of files on the drives.", Default = false)]
+        public bool UsnJournal { get; set; }
+
         [Option('p', "Profile", Required = false, HelpText = "A profile file where you can define a series of source/target folders to be synced repeatedly.")]
         public string Profile { get; set; }
     }

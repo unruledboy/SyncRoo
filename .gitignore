@@ -10,3 +10,5 @@
 /SyncRoo/appsettings.local.json
 /SyncRoo/Properties/PublishProfiles
 *.user
+/EverythingSZ/bin/Debug/netstandard2.0
+/EverythingSZ/obj

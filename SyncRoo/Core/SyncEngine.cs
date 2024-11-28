@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,7 +10,7 @@ using SyncRoo.Utils;
 
 namespace SyncRoo.Core
 {
-    public class Engine(CommandOptions commandOptions, IOptions<AppSyncSettings> syncSettings, IFileStorageProvider fileStorageProvider, ILogger logger)
+    public class SyncEngine(CommandOptions commandOptions, IOptions<AppSyncSettings> syncSettings, IFileStorageProvider fileStorageProvider, IEnumerable<IFileSourceProvider> fileSourceProviders, ILogger logger)
     {
         private readonly AppSyncSettings syncSettings = syncSettings.Value;
         private readonly SyncReport syncReport = new();
@@ -305,10 +304,10 @@ namespace SyncRoo.Core
 
             await fileStorageProvider.PrepareFileStorage(commandOptions.DatabaseConnectionString, fileMode, logger);
 
-            foreach (var file in Directory.EnumerateFiles(rootFolder))
-            {
-                var fileInfo = new FileInfo(file);
+            var fileSource = GetFileSource(rootFolder);
 
+            foreach (var fileInfo in fileSource)
+            {
                 pendingFiles.Add(new FileDto
                 {
                     FileName = fileInfo.FullName[(rootFolder.Length + 1)..],
@@ -342,6 +341,20 @@ namespace SyncRoo.Core
             }
 
             logger.LogInformation("Scanned {FileMode} files in {RootFolder}...", fileMode, rootFolder);
+        }
+
+        private IEnumerable<FileInfo> GetFileSource(string folder)
+        {
+            logger.LogInformation("Initializing file source provider...");
+
+            var fileSourceProvider = fileSourceProviders.FirstOrDefault(x => x.IsSupported(folder, commandOptions.UsnJournal));
+
+            fileSourceProvider ??= fileSourceProviders.First(x => x.Name == SourceProviders.Native);
+            fileSourceProvider.Init();
+
+            logger.LogInformation("Initialized file source provider.");
+
+            return fileSourceProvider.Find(folder);
         }
     }
 }
