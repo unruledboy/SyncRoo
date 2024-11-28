@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -18,35 +19,19 @@ namespace SyncRoo.Core
         {
             syncReport.StartedTime = DateTime.Now;
 
-            await fileStorageProvider.Initialize(commandOptions.DatabaseConnectionString, logger);
-
-            if (!string.IsNullOrWhiteSpace(commandOptions.Operation))
+            if (!string.IsNullOrWhiteSpace(commandOptions.Profile))
             {
-                switch (commandOptions.Operation)
-                {
-                    case Operations.Scan:
-                        await ScanFiles(commandOptions.SourceFolder, SyncFileMode.Source);
-                        await ScanFiles(commandOptions.TargetFolder, SyncFileMode.Target);
-                        break;
-                    case Operations.Process:
-                        await ProcessPendingFiles();
-                        break;
-                    case Operations.Run:
-                        await GenerateAndRunBatchFiles();
-                        break;
-                }
+                await ProcessProfile();
             }
             else
             {
-                await ScanFiles(commandOptions.SourceFolder, SyncFileMode.Source);
-                await ScanFiles(commandOptions.TargetFolder, SyncFileMode.Target);
-                await ProcessPendingFiles();
-                await GenerateAndRunBatchFiles();
-            }
-
-            if (commandOptions.AutoTeardown)
-            {
-                await fileStorageProvider.Teardown(commandOptions.DatabaseConnectionString, logger);
+                var task = new SyncTaskDto
+                {
+                    SourceFolder = commandOptions.SourceFolder,
+                    TargetFolder = commandOptions.TargetFolder,
+                    BatchFolder = commandOptions.BatchFolder
+                };
+                await ProcessTask(task, commandOptions.AutoTeardown);
             }
 
             syncReport.FinishedTime = DateTime.Now;
@@ -54,8 +39,96 @@ namespace SyncRoo.Core
             ProduceReport();
         }
 
+        private async Task ProcessProfile()
+        {
+            var result = ValidateProfile(out var profile);
+
+            if (!result)
+            {
+                return;
+            }
+
+            foreach (var task in profile.Tasks)
+            {
+                await ProcessTask(task, true);
+            }
+        }
+
+        private bool ValidateProfile(out ProfileDto profile)
+        {
+            profile = default;
+
+            if (!File.Exists(commandOptions.Profile))
+            {
+                logger.LogError("Profile file does not exist.");
+
+                return false;
+            }
+
+            profile = JsonSerializer.Deserialize<ProfileDto>(File.ReadAllText(commandOptions.Profile));
+
+            if (profile == null)
+            {
+                logger.LogError("Invalid profile file.");
+
+                return false;
+            }
+
+            if (profile.Tasks.Count == 0)
+            {
+                logger.LogError("No task found in the profile file.");
+
+                return false;
+            }
+
+            if (profile.Tasks.Exists(x => string.IsNullOrWhiteSpace(x.SourceFolder) || !File.Exists(x.SourceFolder)))
+            {
+                logger.LogError("All source folders must exist.");
+
+                return false;
+            }
+
+            return true;
+        }
+
+        private async Task ProcessTask(SyncTaskDto task, bool autoTeardown)
+        {
+            await fileStorageProvider.Initialize(commandOptions.DatabaseConnectionString, logger);
+
+            if (!string.IsNullOrWhiteSpace(commandOptions.Operation))
+            {
+                switch (commandOptions.Operation)
+                {
+                    case Operations.Scan:
+                        await ScanFiles(task.SourceFolder, SyncFileMode.Source);
+                        await ScanFiles(task.TargetFolder, SyncFileMode.Target);
+                        break;
+                    case Operations.Process:
+                        await ProcessPendingFiles();
+                        break;
+                    case Operations.Run:
+                        await GenerateAndRunBatchFiles(task);
+                        break;
+                }
+            }
+            else
+            {
+                await ScanFiles(task.SourceFolder, SyncFileMode.Source);
+                await ScanFiles(task.TargetFolder, SyncFileMode.Target);
+                await ProcessPendingFiles();
+                await GenerateAndRunBatchFiles(task);
+            }
+
+            if (autoTeardown)
+            {
+                await fileStorageProvider.Teardown(commandOptions.DatabaseConnectionString, logger);
+            }
+        }
+
         private void ProduceReport()
         {
+            syncReport.Timer.Stop();
+
             logger.LogInformation("Sync report");
             logger.LogInformation("\tStart time: {StartTime}", syncReport.StartedTime);
             logger.LogInformation("\tFinish time: {FinishTime}", syncReport.FinishedTime);
@@ -64,11 +137,20 @@ namespace SyncRoo.Core
             logger.LogInformation("\tTarget file count: {TargetFileCount}", syncReport.TargetFileCount);
             logger.LogInformation("\tProcessed file count: {ProcessedFileCount}", syncReport.ProcessedFileCount);
             logger.LogInformation("\tProcessed file size: {ProcessedFileSize}", FileUtils.FormatSize(syncReport.ProcessedFileBytes));
+
+            var totalSeconds = syncReport.Timer.Elapsed.TotalSeconds;
+            if (totalSeconds < 0)
+            {
+                totalSeconds = 1;
+            }
+
+            var bytesPerSecond = Convert.ToInt64(syncReport.ProcessedFileBytes / totalSeconds);
+            logger.LogInformation("\tProcess speed: {ProcessSpeed}", $"{FileUtils.FormatSize(bytesPerSecond)}/s");
         }
 
-        private async Task GenerateAndRunBatchFiles()
+        private async Task GenerateAndRunBatchFiles(SyncTaskDto task)
         {
-            var batchFiles = await GenerateBatchFiles();
+            var batchFiles = await GenerateBatchFiles(task);
 
             if (batchFiles.Count == 0)
             {
@@ -104,11 +186,11 @@ namespace SyncRoo.Core
             });
         }
 
-        private async Task<List<string>> GenerateBatchFiles()
+        private async Task<List<string>> GenerateBatchFiles(SyncTaskDto task)
         {
             const string DefaultBatchFolder = "Batch";
             using var connection = new SqlConnection(commandOptions.DatabaseConnectionString);
-            var batchFolder = commandOptions.BatchFolder;
+            var batchFolder = task.BatchFolder;
 
             if (string.IsNullOrWhiteSpace(batchFolder))
             {
@@ -158,8 +240,8 @@ namespace SyncRoo.Core
 
                 var batchContent = string.Join("\r\n", result.Select(x =>
                 {
-                    var sourceFile = Path.Combine(commandOptions.SourceFolder, x.FileName);
-                    var targetFile = Path.Combine(commandOptions.TargetFolder, x.FileName);
+                    var sourceFile = Path.Combine(task.SourceFolder, x.FileName);
+                    var targetFile = Path.Combine(task.TargetFolder, x.FileName);
 
                     var command = $"COPY \"{sourceFile}\" \"{targetFile}\" /y";
 
@@ -185,7 +267,7 @@ namespace SyncRoo.Core
             logger.LogInformation("Processing pending files...");
 
             var result = await fileStorageProvider.Run(syncSettings, commandOptions.DatabaseConnectionString, logger);
-            
+
             syncReport.ProcessedFileCount = result.FileCount;
             syncReport.ProcessedFileBytes = result.FileBytes;
 
@@ -197,7 +279,16 @@ namespace SyncRoo.Core
             var pendingFiles = new List<FileDto>();
             var totalFileCount = 0L;
 
-            logger.LogInformation("Scanning {FileMode} files...", fileMode);
+            logger.LogInformation("Scanning {FileMode} files in {RootFolder}...", fileMode, rootFolder);
+
+            if (!Directory.Exists(rootFolder))
+            {
+                Directory.CreateDirectory(rootFolder);
+
+                logger.LogInformation("{RootFolder} does not exist. Created automatically.", rootFolder);
+
+                return;
+            }
 
             await fileStorageProvider.PrepareFileStorage(commandOptions.DatabaseConnectionString, fileMode, logger);
 
@@ -227,8 +318,6 @@ namespace SyncRoo.Core
                 pendingFiles.Clear();
             }
 
-            logger.LogInformation("Scanned {FileMode} files.", fileMode);
-
             switch (fileMode)
             {
                 case SyncFileMode.Source:
@@ -238,6 +327,8 @@ namespace SyncRoo.Core
                     syncReport.TargetFileCount = totalFileCount;
                     break;
             }
+
+            logger.LogInformation("Scanned {FileMode} files in {RootFolder}...", fileMode, rootFolder);
         }
     }
 }

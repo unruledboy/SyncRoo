@@ -25,6 +25,8 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
 
 ## Usage
 
+## Command Options
+
 ```text
   -s, --Source          Required. The source folder where the files to be copied from.
 
@@ -40,12 +42,48 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
 
   -a, --AutoTeardown    (Default: false) Automatically teardown intermediate resources.
 
+  -p, --Profile			(Default: false) A profile file where you can define a series of source/target folders to be synced repeatedly.
+
   --help                Display this help screen.
 
   --version             Display version information.
 ```
 
-## Tech stack
+### Basic Commands
+
+If it's for occasional file sync, you may choose to specify the source folder with `-s` parameter and the target folder with `-t` parameter, like below:
+```bat
+SyncRoo -s "D:\MyPictures\Favorites" -t "Z:\Backup\Pictures\Favorites"
+```
+
+By default, it would use the `Batch` folder in the SyncRoo application folder to store intermediate batch files that will be executed to synchronize the files. You can specify a different folder if needed, like below:
+```bat
+SyncRoo -s "D:\MyPictures\Favorites" -t "Z:\Backup\Pictures\Favorites" -b "C:\Temp\SyncRooBatch"
+```
+
+### Profile Command
+If you need to regularly synchornize files between folders, you may create a profile file with multiple sync tasks, which is a simple json file, like below:
+```json
+{
+	"tasks": [
+		{
+			"sourceFolder": "D:\MyPictures\Favorites",
+			"targetFolder": "Z:\Backup\Pictures\Favorites"
+		},
+		{
+			"sourceFolder": "D:\MyVideos\BestCollections",
+			"targetFolder": "Z:\Backup\Videos\BestCollections"
+		}
+	]
+}
+```
+
+Then you can provide the profile file via `-p` parameter, like below:
+```bat
+SyncRoo -p "D:\MySyncRooTasks\DailySync.json"
+```
+
+## Tech Stack
 It's primary .NET stack:
 - .NET 8 with C# 12
 - Dapper: for data access
@@ -55,9 +93,12 @@ It's primary .NET stack:
 
 ## Storage Providers
 SyncRoo supports multiple storage to persist the file name, size and modified time of the files in the source folder, target folder and the delta, including:
+- Sqlite
 - SQL Server
 - SQL Server Express LocalDB
-- Sqlite
+
+### Sqlite
+Sqlite is shipped with SyncRoo, and it's the default storage provider.
 
 ### SQL Server
 If you have an existing SQL Server, you can use that and specify the connection string in the appsettings.json file.
@@ -72,7 +113,3 @@ If the total number of files including the source, the target and the delta are 
 To download the latest version (currently 2022), please click [SQL Server 2022 Express LocalDB](https://download.microsoft.com/download/3/8/d/38de7036-2433-4207-8eae-06e247e17b25/SqlLocalDB.msi).
 
 To isntall, follow the steps of the installation wizard.
-
-
-### Sqlite
-Sqlite is shipped with SyncRoo.
