@@ -42,7 +42,7 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
 
   -a, --AutoTeardown    (Default: false) Automatically teardown intermediate resources.
 
-  -p, --Profile			(Default: false) A profile file where you can define a series of source/target folders to be synced repeatedly.
+  -p, --Profile         (Default: false) A profile file where you can define a series of source/target folders to be synced repeatedly.
 
   --help                Display this help screen.
 

@@ -73,7 +73,8 @@ namespace SyncRoo.FileStorageProviders
 
             using var connection = new SqliteConnection(connectionString);
 
-            const string SqlText = @"INSERT INTO PendingFile (FileName, Size, ModifiedTime)
+            const string SqlText = @"pragma journal_mode=OFF;
+    INSERT INTO PendingFile (FileName, Size, ModifiedTime)
 		SELECT sf.FileName, sf.Size, sf.ModifiedTime FROM SourceFile sf
 			LEFT OUTER JOIN TargetFile tf ON sf.FileName = tf.FileName
 			WHERE tf.FileName IS NULL OR sf.Size <> tf.Size OR sf.ModifiedTime > tf.ModifiedTime;
@@ -103,7 +104,8 @@ namespace SyncRoo.FileStorageProviders
                 SyncFileMode.Source => "SourceFile",
                 _ => "TargetFile",
             };
-            command.CommandText = $"INSERT INTO {tableName} (FileName, Size, ModifiedTime) VALUES (@FileName, @Size, @ModifiedTime)";
+            command.CommandText = @$"pragma journal_mode=OFF;
+INSERT INTO {tableName} (FileName, Size, ModifiedTime) VALUES (@FileName, @Size, @ModifiedTime)";
             command.CommandTimeout = syncSettings.CommandTimeoutInSeconds;
 
             var parameterNames = new[]
