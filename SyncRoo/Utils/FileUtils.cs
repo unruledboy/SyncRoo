@@ -5,11 +5,19 @@ namespace SyncRoo.Utils
 {
     public static class FileUtils
     {
-        public static void SafeDelete(this string file)
+        public static void SafeDeleteFile(this string file)
         {
             if (File.Exists(file))
             {
                 File.Delete(file);
+            }
+        }
+
+        public static void SafeDeleteDirectory(this string folder)
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder);
             }
         }
 

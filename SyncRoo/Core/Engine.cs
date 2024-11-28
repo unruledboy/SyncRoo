@@ -159,14 +159,14 @@ namespace SyncRoo.Core
 
         private async Task GenerateAndRunBatchFiles(SyncTaskDto task)
         {
-            var batchFiles = await GenerateBatchFiles(task);
+            var batchResult = await GenerateBatchFiles(task);
 
-            if (batchFiles.Count == 0)
+            if (batchResult.Files.Count == 0)
             {
                 logger.LogInformation("No batch files generated.");
             }
 
-            Parallel.ForEach(batchFiles, new ParallelOptions
+            Parallel.ForEach(batchResult.Files, new ParallelOptions
             {
                 MaxDegreeOfParallelism = commandOptions.MultiThreads,
                 TaskScheduler = TaskScheduler.Default
@@ -184,7 +184,7 @@ namespace SyncRoo.Core
                     process.Start();
                     process.WaitForExit(TimeSpan.FromSeconds(syncSettings.ProcessTimeoutInSeconds));
 
-                    batchFile.SafeDelete();
+                    batchFile.SafeDeleteFile();
 
                     logger.LogInformation("Ran batch file {BatchFile}.", batchFile);
                 }
@@ -193,12 +193,15 @@ namespace SyncRoo.Core
                     logger.LogError(ex, "Failed to run batch file {BatchFile}", batchFile);
                 }
             });
+
+            batchResult.Folder.SafeDeleteDirectory();
         }
 
-        private async Task<List<string>> GenerateBatchFiles(SyncTaskDto task)
+        private async Task<BatchFileDto> GenerateBatchFiles(SyncTaskDto task)
         {
             const string DefaultBatchFolder = "Batch";
             using var connection = new SqlConnection(commandOptions.DatabaseConnectionString);
+            var batchResult = new BatchFileDto();
             var batchFolder = task.BatchFolder;
 
             if (string.IsNullOrWhiteSpace(batchFolder))
@@ -221,9 +224,10 @@ namespace SyncRoo.Core
                 Directory.CreateDirectory(batchRunFolder);
             }
 
+            batchResult.Folder = batchRunFolder;
+
             logger.LogInformation("Batch files will be generated in {BatchFolder} for this run...", batchRunFolder);
 
-            var batchFiles = new List<string>();
             var lastId = 0L;
             var batchFileCount = 0;
             var pendingFileCount = await fileStorageProvider.GetPendingFileCount(commandOptions.DatabaseConnectionString);
@@ -260,7 +264,7 @@ namespace SyncRoo.Core
                 var batchFile = Path.Combine(batchRunFolder, $"{batchId}.bat");
                 await File.WriteAllTextAsync(batchFile, batchContent);
 
-                batchFiles.Add(batchFile);
+                batchResult.Files.Add(batchFile);
                 batchFileCount++;
 
                 logger.LogInformation("Generated file batch {BatchId}: {BatchFile}, totally {BatchFileCount} batch files.", batchId, batchFile, batchFileCount);
@@ -268,7 +272,7 @@ namespace SyncRoo.Core
 
             logger.LogInformation("Generated {BatchFileCount} batch files.", batchFileCount);
 
-            return batchFiles;
+            return batchResult;
         }
 
         private async Task ProcessPendingFiles()
