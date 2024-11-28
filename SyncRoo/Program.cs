@@ -49,11 +49,12 @@ namespace SyncRoo
 
                     switch (configuration["Sync:FilStorageProvider"]?.ToLowerInvariant())
                     {
-                        case StorageProviders.Sqlite:
-                            services.AddSingleton<IFileStorageProvider, SqliteFileStorageProvider>();
+                        case StorageProviders.SqlServer:
+                        case StorageProviders.SqlServerLocalDB:
+                            services.AddSingleton<IFileStorageProvider, SqlServerFileStorageProvider>();
                             break;
                         default:
-                            services.AddSingleton<IFileStorageProvider, SqlServerFileStorageProvider>();
+                            services.AddSingleton<IFileStorageProvider, SqliteFileStorageProvider>();
                             break;
                     }
 

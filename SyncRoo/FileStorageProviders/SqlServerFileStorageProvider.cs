@@ -37,8 +37,12 @@ namespace SyncRoo.FileStorageProviders
 
             using var connection = new SqlConnection(connectionString);
             var sqlText = FileSystemStorage.GetProviderContent($"{nameof(SqlServerFileStorageProvider)}.sql");
+            var sqlStatements = sqlText.Split("GO\r\n");
 
-            await connection.ExecuteAsync(sqlText);
+            foreach (var sqlStatement in sqlStatements.Where(x => !string.IsNullOrWhiteSpace(x)))
+            {
+                await connection.ExecuteAsync(sqlStatement);
+            }
 
             logger.LogInformation("Initialized for provider {FileStorageProvider}...", nameof(SqlServerFileStorageProvider));
         }
