@@ -67,12 +67,16 @@ If you need to regularly synchronize files between folders, you may create a pro
 {
 	"tasks": [
 		{
-			"sourceFolder": "D:\MyPictures\Favorites",
-			"targetFolder": "Z:\Backup\Pictures\Favorites"
+			"sourceFolder": "D:\\MyPictures\\Favorites",
+			"targetFolder": "X:\\Backup\\Pictures\\Favorites"
 		},
 		{
-			"sourceFolder": "D:\MyVideos\BestCollections",
-			"targetFolder": "Z:\Backup\Videos\BestCollections"
+			"sourceFolder": "D:\\MyVideos\\BestCollections",
+			"targetFolder": "Y:\\AnotherBackup\\Videos\\BestCollections"
+		},
+		{
+			"sourceFolder": "D:\\MyMusics\\TopAlbums",
+			"targetFolder": "Z:\\MoreBackup\\Music\\TopAlbums"
 		}
 	]
 }
