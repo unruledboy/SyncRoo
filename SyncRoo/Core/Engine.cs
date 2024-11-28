@@ -145,7 +145,10 @@ namespace SyncRoo.Core
             }
 
             var bytesPerSecond = Convert.ToInt64(syncReport.ProcessedFileBytes / totalSeconds);
-            logger.LogInformation("\tProcess speed: {ProcessSpeed}", $"{FileUtils.FormatSize(bytesPerSecond)}/s");
+            var filesPerSecond = Convert.ToInt64(syncReport.ProcessedFileCount / totalSeconds);
+
+            logger.LogInformation("\tProcess data speed: {ProcessSpeed}", $"{FileUtils.FormatSize(bytesPerSecond)}/s");
+            logger.LogInformation("\tProcess file speed: {ProcessSpeed}", $"{filesPerSecond} files/s");
         }
 
         private async Task GenerateAndRunBatchFiles(SyncTaskDto task)
