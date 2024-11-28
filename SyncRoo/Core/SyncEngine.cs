@@ -235,7 +235,6 @@ namespace SyncRoo.Core
             logger.LogInformation("Batch files will be generated in {BatchFolder} for this run...", batchRunFolder);
 
             var lastId = 0L;
-            var batchFileCount = 0;
             var pendingFileCount = await fileStorageProvider.GetPendingFileCount(commandOptions.DatabaseConnectionString);
 
             if (pendingFileCount == 0)
@@ -255,6 +254,9 @@ namespace SyncRoo.Core
                     break;
                 }
 
+                syncReport.ProcessedFileBytes += result.Sum(x => x.Size);
+                syncReport.ProcessedFileCount += result.Count;
+
                 lastId = result[^1].Id;
 
                 var batchContent = string.Join("\r\n", result.Select(x =>
@@ -271,12 +273,11 @@ namespace SyncRoo.Core
                 await File.WriteAllTextAsync(batchFile, batchContent);
 
                 batchResult.Files.Add(batchFile);
-                batchFileCount++;
 
-                logger.LogInformation("Generated file batch {BatchId}: {BatchFile}, totally {BatchFileCount} batch files.", batchId, batchFile, batchFileCount);
+                logger.LogInformation("Generated file batch {BatchId}: {BatchFile}, totally {BatchFileCount} batch files.", batchId, batchFile, batchResult.Files.Count);
             }
 
-            logger.LogInformation("Generated {BatchFileCount} batch files.", batchFileCount);
+            logger.LogInformation("Generated {BatchFileCount} batch files.", batchResult.Files.Count);
 
             return batchResult;
         }
@@ -285,10 +286,7 @@ namespace SyncRoo.Core
         {
             logger.LogInformation("Processing pending files...");
 
-            var result = await fileStorageProvider.Run(syncSettings, commandOptions.DatabaseConnectionString, logger);
-
-            syncReport.ProcessedFileCount = result.FileCount;
-            syncReport.ProcessedFileBytes = result.FileBytes;
+            await fileStorageProvider.Run(syncSettings, commandOptions.DatabaseConnectionString, logger);
 
             logger.LogInformation("Processed pending files.");
         }
@@ -340,10 +338,10 @@ namespace SyncRoo.Core
             switch (fileMode)
             {
                 case SyncFileMode.Source:
-                    syncReport.SourceFileCount = totalFileCount;
+                    syncReport.SourceFileCount += totalFileCount;
                     break;
                 case SyncFileMode.Target:
-                    syncReport.TargetFileCount = totalFileCount;
+                    syncReport.TargetFileCount += totalFileCount;
                     break;
             }
 

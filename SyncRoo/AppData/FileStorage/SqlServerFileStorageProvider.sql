@@ -60,7 +60,6 @@ BEGIN
 			LEFT OUTER JOIN dbo.TargetFile tf ON sf.FileName = tf.FileName
 			WHERE tf.FileName IS NULL OR sf.Size <> tf.Size OR sf.ModifiedTime > tf.ModifiedTime
 
-    SELECT (SELECT COUNT(*) FROM dbo.PendingFile) AS FileCount, (SELECT SUM(Size) FROM dbo.PendingFile) AS FileBytes
 END
 GO
 

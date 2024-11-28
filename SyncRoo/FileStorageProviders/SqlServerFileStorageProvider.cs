@@ -59,15 +59,13 @@ namespace SyncRoo.FileStorageProviders
             await connection.ExecuteAsync($"TRUNCATE TABLE dbo.{tableName}");
         }
 
-        public async Task<FileStatDto> Run(AppSyncSettings syncSettings, string connectionString, ILogger logger)
+        public async Task Run(AppSyncSettings syncSettings, string connectionString, ILogger logger)
         {
             await ClearnupFileStorage(connectionString, SyncFileMode.Pending);
 
             using var connection = new SqlConnection(connectionString);
 
-            var result = await connection.QueryFirstAsync<FileStatDto>("EXEC dbo.usp_AddPendingFiles", commandTimeout: syncSettings.CommandTimeoutInSeconds);
-
-            return result;
+            await connection.ExecuteAsync("EXEC dbo.usp_AddPendingFiles", commandTimeout: syncSettings.CommandTimeoutInSeconds);
         }
 
         public async Task Save(AppSyncSettings syncSettings, string connectionString, List<FileDto> files, SyncFileMode fileMode, ILogger logger)

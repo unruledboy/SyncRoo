@@ -23,10 +23,16 @@ namespace SyncRoo.FileStorageProviders
         {
             using var connection = new SqliteConnection(connectionString);
 
-            var result = (await connection.QueryAsync<PendingFileDto>("SELECT * FROM PendingFile WHERE Id > @LastId ORDER BY Id LIMIT @Next OFFSET 0",
+            var result = (await connection.QueryAsync<SqlitePendingFileDto>("SELECT * FROM PendingFile WHERE Id > @LastId ORDER BY Id LIMIT @Next OFFSET 0",
                 new { LastId = lastId, Next = batchSize })).ToList();
 
-            return result;
+            return result.Select(x => new PendingFileDto
+            {
+                Id = x.Id,
+                FileName = x.FileName,
+                Size = x.Size,
+                ModifiedTime = DateTime.UnixEpoch.AddSeconds(x.ModifiedTime)
+            }).ToList();
         }
 
         public virtual async Task Initialize(string connectionString, ILogger logger)
@@ -67,7 +73,7 @@ namespace SyncRoo.FileStorageProviders
             await connection.ExecuteAsync($"DROP TABLE IF EXISTS {tableName}");
         }
 
-        public async Task<FileStatDto> Run(AppSyncSettings syncSettings, string connectionString, ILogger logger)
+        public async Task Run(AppSyncSettings syncSettings, string connectionString, ILogger logger)
         {
             await PrepareFileStorage(connectionString, SyncFileMode.Pending, logger);
 
@@ -77,13 +83,9 @@ namespace SyncRoo.FileStorageProviders
     INSERT INTO PendingFile (FileName, Size, ModifiedTime)
 		SELECT sf.FileName, sf.Size, sf.ModifiedTime FROM SourceFile sf
 			LEFT OUTER JOIN TargetFile tf ON sf.FileName = tf.FileName
-			WHERE tf.FileName IS NULL OR sf.Size <> tf.Size OR sf.ModifiedTime > tf.ModifiedTime;
+			WHERE tf.FileName IS NULL OR sf.Size <> tf.Size OR sf.ModifiedTime > tf.ModifiedTime;";
 
-    SELECT (SELECT COUNT(*) FROM PendingFile) AS FileCount, (SELECT SUM(Size) FROM PendingFile) AS FileBytes";
-
-            var result = await connection.QueryFirstAsync<FileStatDto>(SqlText, commandTimeout: syncSettings.CommandTimeoutInSeconds);
-
-            return result;
+            await connection.ExecuteAsync(SqlText, commandTimeout: syncSettings.CommandTimeoutInSeconds);
         }
 
         public async Task Save(AppSyncSettings syncSettings, string connectionString, List<FileDto> files, SyncFileMode fileMode, ILogger logger)
@@ -93,6 +95,7 @@ namespace SyncRoo.FileStorageProviders
                 throw new ArgumentOutOfRangeException(nameof(fileMode));
             }
 
+            const int BatchValueSize = 1000;
             using var connection = new SqliteConnection(connectionString);
             await connection.OpenAsync();
 
@@ -104,33 +107,13 @@ namespace SyncRoo.FileStorageProviders
                 SyncFileMode.Source => "SourceFile",
                 _ => "TargetFile",
             };
-            command.CommandText = @$"pragma journal_mode=OFF;
-INSERT INTO {tableName} (FileName, Size, ModifiedTime) VALUES (@FileName, @Size, @ModifiedTime)";
-            command.CommandTimeout = syncSettings.CommandTimeoutInSeconds;
 
-            var parameterNames = new[]
+            foreach (var chunkedFiles in files.Chunk(BatchValueSize))
             {
-                "@FileName",
-                "@Size",
-                "@ModifiedTime"
-            };
-
-            var parameters = parameterNames.Select(parameterName =>
-            {
-                var parameter = command.CreateParameter();
-                parameter.ParameterName = parameterName;
-                command.Parameters.Add(parameter);
-
-                return parameter;
-            }).ToArray();
-
-            await command.PrepareAsync();
-
-            foreach (var fileDto in files)
-            {
-                parameters[0].Value = fileDto.FileName;
-                parameters[1].Value = fileDto.Size;
-                parameters[2].Value = fileDto.ModifiedTime;
+                var valueList = string.Join(',', chunkedFiles.Select(x => $"('{x.FileName}', {x.Size}, {Convert.ToInt64((x.ModifiedTime - DateTime.UnixEpoch).TotalSeconds)})"));
+                command.CommandText = @$"pragma journal_mode=OFF;
+INSERT INTO {tableName} (FileName, Size, ModifiedTime) VALUES {valueList}";
+                command.CommandTimeout = syncSettings.CommandTimeoutInSeconds;
 
                 await command.ExecuteNonQueryAsync();
             }
