@@ -25,7 +25,7 @@ namespace SyncRoo.Models
         [Option('a', "AutoTeardown", Required = false, HelpText = "Automatically teardown intermediate resources.", Default = false)]
         public bool AutoTeardown { get; set; }
 
-        [Option('p', "Profile", Required = false, HelpText = "A profile file where you can define a series of source/target folders to be synced repeatedly.", Default = false)]
+        [Option('p', "Profile", Required = false, HelpText = "A profile file where you can define a series of source/target folders to be synced repeatedly.")]
         public string Profile { get; set; }
     }
 }
