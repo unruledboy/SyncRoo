@@ -32,7 +32,7 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
 
   -t, --Target          Required. The target folder where the files to be copied to.
 
-  -b, --Batch           Required. The intermediate folder for the file copy batch commands to be stored.
+  -b, --Batch           The intermediate folder for the file copy batch commands to be stored.
 
   -o, --Operation       A specific operation to be run rather than the whole sync process.
 

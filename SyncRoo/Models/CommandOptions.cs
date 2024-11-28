@@ -10,7 +10,7 @@ namespace SyncRoo.Models
         [Option('t', "Target", Required = true, HelpText = "The target folder where the files to be copied to.")]
         public string TargetFolder { get; set; }
 
-        [Option('b', "Batch", Required = true, HelpText = "The intermediate folder for the file copy batch commands to be stored.")]
+        [Option('b', "Batch", Required = false, HelpText = "The intermediate folder for the file copy batch commands to be stored.")]
         public string BatchFolder { get; set; }
 
         [Option('o', "Operation", Required = false, HelpText = "A specific operation to be run rather than the whole sync process.")]

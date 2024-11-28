@@ -8,3 +8,5 @@
 /SyncRoo/obj/Release/net8.0
 /SyncRoo/obj
 /SyncRoo/appsettings.local.json
+/SyncRoo/Properties/PublishProfiles
+*.user
