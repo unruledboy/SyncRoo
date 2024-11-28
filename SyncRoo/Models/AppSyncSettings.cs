@@ -2,6 +2,7 @@
 {
     public class AppSyncSettings
     {
+        public string BatchFolder { get; set; }
         public int OperationDelayInMs { get; set; }
         public int CommandTimeoutInSeconds { get; set; }
         public int ProcessTimeoutInSeconds { get; set; }

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -29,7 +30,7 @@ namespace SyncRoo.Core
                 {
                     SourceFolder = commandOptions.SourceFolder,
                     TargetFolder = commandOptions.TargetFolder,
-                    BatchFolder = commandOptions.BatchFolder
+                    BatchFolder = commandOptions.BatchFolder ?? syncSettings.BatchFolder
                 };
                 await ProcessTask(task, commandOptions.AutoTeardown);
             }
@@ -86,6 +87,11 @@ namespace SyncRoo.Core
                 logger.LogError("All source folders must exist.");
 
                 return false;
+            }
+
+            foreach (var task in profile.Tasks.Where(x => string.IsNullOrWhiteSpace(x.BatchFolder)))
+            {
+                task.BatchFolder = syncSettings.BatchFolder;
             }
 
             return true;
