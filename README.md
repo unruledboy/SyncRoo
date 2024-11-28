@@ -94,6 +94,7 @@ It's primary .NET stack:
 - FastMember: for fast POCO to database for SQL Server to do bulk insert
 - Serilog: logging, currently only log to the console
 - CommandLineParser: command line options
+- Microsoft.Data.Sqlite: ADO.NET driver for Sqlite
 
 ## Storage Providers
 SyncRoo supports multiple storage to persist the file name, size and modified time of the files in the source folder, target folder and the delta, including:
