@@ -1,5 +1,5 @@
 ## SyncRoo
-SyncRoo can quickly synchornize files between devices. It's a lot quicker than RoboCopy in subsequent delta syncs.
+SyncRoo can quickly synchronize files between devices. It's a lot quicker than RoboCopy in subsequent delta syncs.
 
 Currently it only supports Windows devices.
 
@@ -62,7 +62,7 @@ SyncRoo -s "D:\MyPictures\Favorites" -t "Z:\Backup\Pictures\Favorites" -b "C:\Te
 ```
 
 ### Profile Command
-If you need to regularly synchornize files between folders, you may create a profile file with multiple sync tasks, which is a simple json file, like below:
+If you need to regularly synchronize files between folders, you may create a profile file with multiple sync tasks, which is a simple json file, like below:
 ```json
 {
 	"tasks": [
