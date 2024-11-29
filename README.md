@@ -34,7 +34,7 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
 
   -b, --Batch           The intermediate folder for the file copy batch commands to be stored.
 
-  -f, --FilePatterns    (Default: *.*) The file patterns to be serched for.
+  -f, --FilePatterns    The file patterns to be serched for.
 
   -o, --Operation       A specific operation to be run rather than the whole sync process.
 
@@ -65,6 +65,11 @@ By default, it would use the `Batch` folder in the SyncRoo application folder to
 SyncRoo -s "D:\MyPictures\Favorites" -t "Z:\Backup\Pictures\Favorites" -b "C:\Temp\SyncRooBatch"
 ```
 
+You can specify the file patterns if it's not for all the files (by default it's *.*) via the `-f` parameter, like below:
+```bat
+SyncRoo -s "D:\MyPictures\Favorites" -t "Z:\Backup\Pictures\Favorites" -b "C:\Temp\SyncRooBatch", -f "*.jpg" "*.png" "XYZ*.tiff"
+```
+
 ### Profile Command
 If you need to regularly synchronize files between folders, you may create a profile file with multiple sync tasks, which is a simple json file, like below:
 ```json
@@ -72,7 +77,12 @@ If you need to regularly synchronize files between folders, you may create a pro
 	"tasks": [
 		{
 			"sourceFolder": "D:\\MyPictures\\Favorites",
-			"targetFolder": "X:\\Backup\\Pictures\\Favorites"
+			"targetFolder": "X:\\Backup\\Pictures\\Favorites",
+			"filePatterns": [
+				"*.jpg",
+				"*.png",
+				"XYZ*.tiff"
+			]
 		},
 		{
 			"sourceFolder": "D:\\MyVideos\\BestCollections",

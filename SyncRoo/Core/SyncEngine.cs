@@ -32,7 +32,7 @@ namespace SyncRoo.Core
                     SourceFolder = commandOptions.SourceFolder,
                     TargetFolder = commandOptions.TargetFolder,
                     BatchFolder = commandOptions.BatchFolder ?? syncSettings.BatchFolder,
-                    FilePatterns = commandOptions.FilePatterns
+                    FilePatterns = commandOptions.FilePatterns?.ToList() ?? []
                 };
                 await ProcessTask(task, commandOptions.AutoTeardown);
             }
@@ -375,7 +375,7 @@ namespace SyncRoo.Core
                     break;
             }
 
-            logger.LogInformation("Scanned {FileMode} files in {RootFolder}...", scanTask.FileMode, scanTask.RootFolder);
+            logger.LogInformation("Scanned {FileMode} and found {FileCount} files in {RootFolder}.", scanTask.FileMode, totalFileCount, scanTask.RootFolder);
         }
 
         private IEnumerable<FileInfo> GetFileSource(ScanTaskDto scanTask)
