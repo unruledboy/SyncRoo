@@ -1,5 +1,11 @@
 ﻿namespace SyncRoo.Utils
 {
+    public static class OptionSets
+    {
+        public const string CommandLine = "command";
+        public const string Profile = "profile";
+    }
+
     public static class FilePatterns
     {
         public const string All = "*.*";
@@ -37,6 +43,14 @@
     {
         public const string Native = "Native";
         public const string UsnJournal = "USN";
+    }
+
+    public static class LimitTypes
+    {
+        public const string SizeMin = "sizemin";
+        public const string SizeMax = "sizemax";
+        public const string DateMin = "datemin";
+        public const string DateMax = "datemax";
     }
 
     public enum SyncFileMode

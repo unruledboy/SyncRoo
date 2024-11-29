@@ -1,17 +1,19 @@
 ﻿using CommandLine;
+using Microsoft.VisualBasic;
+using SyncRoo.Models.Dtos;
 using SyncRoo.Utils;
 
 namespace SyncRoo.Models
 {
     public class CommandOptions
     {
-        [Option('s', "Source", Required = false, HelpText = "The source folder where the files to be copied from.")]
+        [Option('s', "Source", Required = false, HelpText = "The source folder where the files to be copied from.", SetName = OptionSets.CommandLine)]
         public string SourceFolder { get; set; }
 
-        [Option('t', "Target", Required = false, HelpText = "The target folder where the files to be copied to.")]
+        [Option('t', "Target", Required = false, HelpText = "The target folder where the files to be copied to.", SetName = OptionSets.CommandLine)]
         public string TargetFolder { get; set; }
 
-        [Option('b', "Batch", Required = false, HelpText = "The intermediate folder for the file copy batch commands to be stored.")]
+        [Option('b', "Batch", Required = false, HelpText = "The intermediate folder for the file copy batch commands to be stored.", SetName = OptionSets.CommandLine)]
         public string BatchFolder { get; set; }
 
         [Option('f', "FilePatterns", Required = false, HelpText = "The file patterns to be serched for.")]
@@ -29,13 +31,16 @@ namespace SyncRoo.Models
         [Option('r', "Rule", Required = false, HelpText = "The rule to determine whether a file should be copied or not: Standard, Newer, Larger.", Default = Rules.Standard)]
         public string Rule { get; set; }
 
+        [Option('l', "Limits", Required = false, HelpText = "The limits to determine whether a file should be copied or not: min/max size, min/max date.")]
+        public IEnumerable<string> Limits { get; set; }
+
         [Option('a', "AutoTeardown", Required = false, HelpText = "Automatically teardown intermediate resources.", Default = false)]
         public bool AutoTeardown { get; set; }
 
         [Option('n', "UsnJournal", Required = false, HelpText = "Use NTFS USN Journal to quickly search for files but this may use large volume of memory depending on the number of files on the drives.", Default = false)]
         public bool UsnJournal { get; set; }
 
-        [Option('p', "Profile", Required = false, HelpText = "A profile file where you can define a series of source/target folders to be synced repeatedly.")]
+        [Option('p', "Profile", Required = false, HelpText = "A profile file where you can define a series of source/target folders to be synced repeatedly.", SetName = OptionSets.Profile)]
         public string Profile { get; set; }
     }
 }

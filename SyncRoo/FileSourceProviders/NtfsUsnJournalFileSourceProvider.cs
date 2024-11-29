@@ -16,7 +16,12 @@ namespace SyncRoo.FileSourceProviders
         {
             foreach (var file in cachedFiles.Where(x => x.StartsWith(task.RootFolder, StringComparison.OrdinalIgnoreCase) && x.IsFilePatternMatched(task.FilePatterns)))
             {
-                yield return new FileInfo(file);
+                var fileInfo = new FileInfo(file);
+
+                if (fileInfo.IsFileLimitMatched(task.Limits))
+                {
+                    yield return fileInfo;
+                }
             }
         }
 

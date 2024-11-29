@@ -42,7 +42,9 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
 
   -d, --Database        The database connection string.
 
-  -r, --Rule            The rule to determine whether a file should be copied or not: standard, newer, larger.
+  -r, --Rule            (Default: standard) The rule to determine whether a file should be copied or not: standard, newer, larger.
+
+  -l, --Limits          The limits to determine whether a file should be copied or not: min/max size, min/max date.
 
   -a, --AutoTeardown    (Default: false) Automatically teardown intermediate resources.
 
@@ -128,6 +130,26 @@ There are 3 types of rules:
 - Standard: this is the default rule, where a new file or a file is different in size or last modified time.
 - Newer: only copy the file if it's newer in the source folder
 - Larger: only copy the file if it's larger in the soruce folder
+
+For example, if you want to only copy the newer files from the source folder with last modified date being later than the one in the target folder, then you can specify the `-r` parameter, like below:
+```bat
+SyncRoo -s "D:\MyPictures\Favorites" -t "Z:\Backup\Pictures\Favorites" -r newer
+```
+
+### Limits
+By default there is no limit, all the files will be included: either a new file, or a file with last modified time changed or the size is different.
+
+There are 4 types of limits to decide whether a file should be copied or not:
+- SizeMin
+- SizeMax
+- DateMin
+- DateMax
+
+For example, if you want to only copy the files with the size being less than 1GB, then you can specify the `-r` parameter, like below:
+
+```bat
+SyncRoo -s "D:\MyPictures\Favorites" -t "Z:\Backup\Pictures\Favorites" -l "SizeMax=1GB"
+```
 
 ## Tech Stack
 It's primary .NET stack:

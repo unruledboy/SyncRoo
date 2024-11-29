@@ -36,7 +36,8 @@ namespace SyncRoo.Core
                     TargetFolder = commandOptions.TargetFolder,
                     BatchFolder = commandOptions.BatchFolder ?? syncSettings.BatchFolder,
                     FilePatterns = commandOptions.FilePatterns?.ToList() ?? [],
-                    Rule = commandOptions.Rule
+                    Rule = commandOptions.Rule,
+                    Limits = commandOptions.Limits?.ToList() ?? [],
                 };
                 await ProcessTask(task, commandOptions.AutoTeardown);
             }
@@ -95,6 +96,7 @@ namespace SyncRoo.Core
                 {
                     logger.LogError("Task with source folder does exist: {RootFolder}", task.SourceFolder);
                 }
+
                 return false;
             }
 
@@ -114,6 +116,18 @@ namespace SyncRoo.Core
                 foreach (var task in tasksWithInvalidRule)
                 {
                     logger.LogError("Task with invalid rule: {Rule}, source folder: {RootFolder}", task.Rule, task.SourceFolder);
+                }
+
+                return false;
+            }
+
+
+            var tasksWithInvalidLimit = profile.Tasks.Where(x => x.IsEnabled && x.Limits != null && x.Limits.Exists(l => !l.IsValidFileLimit(out _, out _))).ToList();
+            if (tasksWithInvalidLimit.Count > 0)
+            {
+                foreach (var task in tasksWithInvalidLimit)
+                {
+                    logger.LogError("Task with invalid limit: {Limit}, source folder: {RootFolder}", string.Join(',', task.Limits), task.SourceFolder);
                 }
                 return false;
             }
@@ -140,7 +154,8 @@ namespace SyncRoo.Core
                             RootFolder = task.SourceFolder,
                             FileMode = SyncFileMode.Source,
                             FilePatterns = task.FilePatterns,
-                            Rule = task.Rule
+                            Rule = task.Rule,
+                            Limits = task.Limits
                         }, syncReport);
 
                         await ScanFiles(new ScanTaskDto
@@ -148,7 +163,8 @@ namespace SyncRoo.Core
                             RootFolder = task.TargetFolder,
                             FileMode = SyncFileMode.Target,
                             FilePatterns = task.FilePatterns,
-                            Rule = task.Rule
+                            Rule = task.Rule,
+                            Limits = task.Limits
                         }, syncReport);
                         break;
                     case Operations.Process:
@@ -166,7 +182,8 @@ namespace SyncRoo.Core
                     RootFolder = task.SourceFolder,
                     FileMode = SyncFileMode.Source,
                     FilePatterns = task.FilePatterns,
-                    Rule = task.Rule
+                    Rule = task.Rule,
+                    Limits = task.Limits
                 }, syncReport);
 
                 await ScanFiles(new ScanTaskDto
@@ -174,7 +191,8 @@ namespace SyncRoo.Core
                     RootFolder = task.TargetFolder,
                     FileMode = SyncFileMode.Target,
                     FilePatterns = task.FilePatterns,
-                    Rule = task.Rule
+                    Rule = task.Rule,
+                    Limits = task.Limits
                 }, syncReport);
 
                 await ProcessPendingFiles(task);

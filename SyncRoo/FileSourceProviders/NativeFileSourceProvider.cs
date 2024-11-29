@@ -14,7 +14,10 @@ namespace SyncRoo.FileSourceProviders
             {
                 var fileInfo = new FileInfo(file);
 
-                yield return fileInfo;
+                if (fileInfo.IsFileLimitMatched(task.Limits))
+                {
+                    yield return fileInfo;
+                }
             }
         }
 
