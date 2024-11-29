@@ -49,6 +49,9 @@ namespace SyncRoo
 
                     switch (configuration["Sync:FilStorageProvider"]?.ToLowerInvariant())
                     {
+                        case StorageProviders.InMemory:
+                            services.AddSingleton<IFileStorageProvider, InMemoryFileStorageProvider>();
+                            break;
                         case StorageProviders.SqlServer:
                         case StorageProviders.SqlServerLocalDB:
                             services.AddSingleton<IFileStorageProvider, SqlServerFileStorageProvider>();

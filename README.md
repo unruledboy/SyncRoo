@@ -134,11 +134,18 @@ It's primary .NET stack:
 ## Storage Providers
 SyncRoo supports multiple storage to persist the file name, size and modified time of the files in the source folder, target folder and the delta, including:
 - Sqlite
+- In-Memory
 - SQL Server
 - SQL Server Express LocalDB
 
 ### Sqlite
 Sqlite is shipped with SyncRoo, and it's the default storage provider.
+
+### In-Memory
+The in-memory provider is the fastest, but it may consume large amount of the memory depending on the number of the files being processed.
+
+> [!WARNING]
+> SyncRoo will need to hold the meta data of the files (file name, size and last modified time), and that could be a lot of memory usage.
 
 ### SQL Server
 If you have an existing SQL Server, you can use that and specify the connection string in the appsettings.json file.
