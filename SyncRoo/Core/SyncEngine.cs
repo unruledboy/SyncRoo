@@ -53,7 +53,7 @@ namespace SyncRoo.Core
                 return;
             }
 
-            foreach (var task in profile.Tasks)
+            foreach (var task in profile.Tasks.Where(x => x.IsEnabled))
             {
                 await ProcessTask(task, true);
             }
@@ -79,14 +79,14 @@ namespace SyncRoo.Core
                 return false;
             }
 
-            if (profile.Tasks.Count == 0)
+            if (!profile.Tasks.Exists(x => x.IsEnabled))
             {
-                logger.LogError("No task found in the profile file.");
+                logger.LogError("No active task found in the profile file.");
 
                 return false;
             }
 
-            var foldersDoNotExist = profile.Tasks.Where(x => string.IsNullOrWhiteSpace(x.SourceFolder) || !Directory.Exists(x.SourceFolder)).ToList();
+            var foldersDoNotExist = profile.Tasks.Where(x => x.IsEnabled && string.IsNullOrWhiteSpace(x.SourceFolder) || !Directory.Exists(x.SourceFolder)).ToList();
             if (foldersDoNotExist.Count > 0)
             {
                 foreach (var folder in foldersDoNotExist)
@@ -96,7 +96,7 @@ namespace SyncRoo.Core
                 return false;
             }
 
-            foreach (var task in profile.Tasks.Where(x => string.IsNullOrWhiteSpace(x.BatchFolder)))
+            foreach (var task in profile.Tasks.Where(x => x.IsEnabled && string.IsNullOrWhiteSpace(x.BatchFolder)))
             {
                 task.BatchFolder = syncSettings.BatchFolder;
             }

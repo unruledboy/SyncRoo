@@ -86,7 +86,8 @@ If you need to regularly synchronize files between folders, you may create a pro
 		},
 		{
 			"sourceFolder": "D:\\MyVideos\\BestCollections",
-			"targetFolder": "Y:\\AnotherBackup\\Videos\\BestCollections"
+			"targetFolder": "Y:\\AnotherBackup\\Videos\\BestCollections",
+			"isEnabled": false
 		},
 		{
 			"sourceFolder": "D:\\MyMusics\\TopAlbums",
@@ -100,6 +101,8 @@ Then you can provide the profile file via `-p` parameter, like below:
 ```bat
 SyncRoo -p "D:\MySyncRooTasks\DailySync.json"
 ```
+
+If you would like to temporarily disable certain task in the profile, you could set `isEnabled` to be `false` for the task, as shown in the second task in above sample.
 
 ### NTFS USN Journal Command
 NTFS tracks changes to the file system and store the info on the MFT. We can quickly search matching files on an NTFS USN Journal enabled drive.
