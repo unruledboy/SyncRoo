@@ -17,8 +17,6 @@ namespace SyncRoo.Core
 
         public async Task Sync()
         {
-            syncReport.StartedTime = DateTime.Now;
-
             if (!string.IsNullOrWhiteSpace(commandOptions.Profile))
             {
                 await ProcessProfile();
@@ -33,10 +31,6 @@ namespace SyncRoo.Core
                 };
                 await ProcessTask(task, commandOptions.AutoTeardown);
             }
-
-            syncReport.FinishedTime = DateTime.Now;
-
-            ProduceReport();
         }
 
         private async Task ProcessProfile()
@@ -105,6 +99,9 @@ namespace SyncRoo.Core
 
         private async Task ProcessTask(SyncTaskDto task, bool autoTeardown)
         {
+            syncReport.Timer.Restart();
+            syncReport.StartedTime = DateTime.Now;
+
             await fileStorageProvider.Initialize(commandOptions.DatabaseConnectionString, logger);
 
             if (!string.IsNullOrWhiteSpace(commandOptions.Operation))
@@ -135,12 +132,18 @@ namespace SyncRoo.Core
             {
                 await fileStorageProvider.Teardown(commandOptions.DatabaseConnectionString, logger);
             }
+            
+            syncReport.FinishedTime = DateTime.Now;
+            syncReport.Timer.Stop();
+
+            ProduceReport();
         }
 
         private void ProduceReport()
         {
             syncReport.Timer.Stop();
 
+            logger.LogInformation("");
             logger.LogInformation("Sync report");
             logger.LogInformation("\tStart time: {StartTime}", syncReport.StartedTime);
             logger.LogInformation("\tFinish time: {FinishTime}", syncReport.FinishedTime);
@@ -161,6 +164,8 @@ namespace SyncRoo.Core
 
             logger.LogInformation("\tProcess data speed: {ProcessSpeed}", $"{FileUtils.FormatSize(bytesPerSecond)}/s");
             logger.LogInformation("\tProcess file speed: {ProcessSpeed}", $"{filesPerSecond} files/s");
+            logger.LogInformation("");
+            logger.LogInformation("");
         }
 
         private async Task GenerateAndRunBatchFiles(SyncTaskDto task)
