@@ -64,7 +64,7 @@ namespace SyncRoo.FileStorageProviders
         private async Task ClearnupFileStorage(string connectionString, SyncFileMode fileMode)
             => await PrepareFileStorage(connectionString, fileMode, default);
 
-        public async Task Run(AppSyncSettings syncSettings, string connectionString, ILogger logger)
+        public async Task Run(AppSyncSettings syncSettings, string connectionString, SyncTaskDto task, ILogger logger)
         {
             await PrepareFileStorage(connectionString, SyncFileMode.Pending, logger);
 
@@ -75,8 +75,9 @@ namespace SyncRoo.FileStorageProviders
                 fileCount++;
 
                 if (!targetFiles.TryGetValue(sourceFile.Key, out var file)
-                    || sourceFile.Value.Size != file.Size
-                    || sourceFile.Value.ModifiedTime != file.ModifiedTime)
+                    || (task.Rule == Rules.Standard && (sourceFile.Value.Size != file.Size || sourceFile.Value.ModifiedTime != file.ModifiedTime))
+                    || (task.Rule == Rules.Newer && sourceFile.Value.ModifiedTime > file.ModifiedTime)
+                    || (task.Rule == Rules.Larger && sourceFile.Value.Size > file.Size))
                 {
                     var fileDto = sourceFile.Value;
 

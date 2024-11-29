@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using SyncRoo.Utils;
 
 namespace SyncRoo.Models
 {
@@ -24,6 +25,9 @@ namespace SyncRoo.Models
 
         [Option('d', "Database", Required = false, HelpText = "The database connection string.")]
         public string DatabaseConnectionString { get; set; }
+
+        [Option('r', "Rule", Required = false, HelpText = "The rule to determine whether a file should be copied or not: Standard, Newer, Larger.", Default = Rules.Standard)]
+        public string Rule { get; set; }
 
         [Option('a', "AutoTeardown", Required = false, HelpText = "Automatically teardown intermediate resources.", Default = false)]
         public bool AutoTeardown { get; set; }

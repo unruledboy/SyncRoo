@@ -73,7 +73,7 @@ namespace SyncRoo.FileStorageProviders
             await connection.ExecuteAsync($"DROP TABLE IF EXISTS {tableName}");
         }
 
-        public async Task Run(AppSyncSettings syncSettings, string connectionString, ILogger logger)
+        public async Task Run(AppSyncSettings syncSettings, string connectionString, SyncTaskDto task, ILogger logger)
         {
             await PrepareFileStorage(connectionString, SyncFileMode.Pending, logger);
 
@@ -83,9 +83,13 @@ namespace SyncRoo.FileStorageProviders
     INSERT INTO PendingFile (FileName, Size, ModifiedTime)
 		SELECT sf.FileName, sf.Size, sf.ModifiedTime FROM SourceFile sf
 			LEFT OUTER JOIN TargetFile tf ON sf.FileName = tf.FileName
-			WHERE tf.FileName IS NULL OR sf.Size <> tf.Size OR sf.ModifiedTime > tf.ModifiedTime;";
+			WHERE tf.FileName IS NULL
+            OR (@Rule = 'standard' AND (sf.Size <> tf.Size OR sf.ModifiedTime <> tf.ModifiedTime))
+			OR (@Rule = 'newer' AND sf.ModifiedTime > tf.ModifiedTime)
+			OR (@Rule = 'larger' AND sf.Size > tf.Size)
+            ;";
 
-            await connection.ExecuteAsync(SqlText, commandTimeout: syncSettings.CommandTimeoutInSeconds);
+            await connection.ExecuteAsync(SqlText, new { task.Rule }, commandTimeout: syncSettings.CommandTimeoutInSeconds);
         }
 
         public async Task Save(AppSyncSettings syncSettings, string connectionString, List<FileDto> files, SyncFileMode fileMode, ILogger logger)

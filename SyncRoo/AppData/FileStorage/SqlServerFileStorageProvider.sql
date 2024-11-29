@@ -52,13 +52,17 @@ END
 GO
 
 CREATE OR ALTER PROCEDURE [dbo].[usp_AddPendingFiles]
+	@Rule nvarchar(50)
 AS
 BEGIN
 
 	INSERT INTO dbo.PendingFile (FileName, Size, ModifiedTime)
 		SELECT sf.FileName, sf.Size, sf.ModifiedTime FROM dbo.SourceFile sf
 			LEFT OUTER JOIN dbo.TargetFile tf ON sf.FileName = tf.FileName
-			WHERE tf.FileName IS NULL OR sf.Size <> tf.Size OR sf.ModifiedTime > tf.ModifiedTime
+			WHERE tf.FileName IS NULL
+				OR (@Rule = 'standard' AND (sf.Size <> tf.Size OR sf.ModifiedTime <> tf.ModifiedTime))
+				OR (@Rule = 'newer' AND sf.ModifiedTime > tf.ModifiedTime)
+				OR (@Rule = 'larger' AND sf.Size > tf.Size)
 
 END
 GO

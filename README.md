@@ -42,6 +42,8 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
 
   -d, --Database        The database connection string.
 
+  -r, --Rule            The rule to determine whether a file should be copied or not: standard, newer, larger.
+
   -a, --AutoTeardown    (Default: false) Automatically teardown intermediate resources.
 
   -n, --UsnJournal      (Default: false) Use NTFS USN Journal to quickly search for files but this may use large volume of memory depending on the number of files on the drives.
@@ -120,6 +122,12 @@ To enable the support for USN Journal, specify the `-n` parameter, like below:
 ```bat
 SyncRoo -s "D:\MyPictures\Favorites" -t "Z:\Backup\Pictures\Favorites" -n
 ```
+
+### Rules
+There are 3 types of rules:
+- Standard: this is the default rule, where a new file or a file is different in size or last modified time.
+- Newer: only copy the file if it's newer in the source folder
+- Larger: only copy the file if it's larger in the soruce folder
 
 ## Tech Stack
 It's primary .NET stack:

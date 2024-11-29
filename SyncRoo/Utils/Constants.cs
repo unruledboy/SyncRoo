@@ -11,6 +11,13 @@
         public const string Overall = "Overall";
     }
 
+    public static class Rules
+    {
+        public const string Standard = "standard";
+        public const string Newer = "newer";
+        public const string Larger = "larger";
+    }
+
     public static class Operations
     {
         public const string Scan = "scan";

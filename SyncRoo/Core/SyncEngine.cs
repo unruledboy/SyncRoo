@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -34,7 +35,8 @@ namespace SyncRoo.Core
                     SourceFolder = commandOptions.SourceFolder,
                     TargetFolder = commandOptions.TargetFolder,
                     BatchFolder = commandOptions.BatchFolder ?? syncSettings.BatchFolder,
-                    FilePatterns = commandOptions.FilePatterns?.ToList() ?? []
+                    FilePatterns = commandOptions.FilePatterns?.ToList() ?? [],
+                    Rule = commandOptions.Rule
                 };
                 await ProcessTask(task, commandOptions.AutoTeardown);
             }
@@ -86,12 +88,12 @@ namespace SyncRoo.Core
                 return false;
             }
 
-            var foldersDoNotExist = profile.Tasks.Where(x => x.IsEnabled && string.IsNullOrWhiteSpace(x.SourceFolder) || !Directory.Exists(x.SourceFolder)).ToList();
-            if (foldersDoNotExist.Count > 0)
+            var tasksWithSourceFoldersDoesNotExist = profile.Tasks.Where(x => x.IsEnabled && string.IsNullOrWhiteSpace(x.SourceFolder) || !Directory.Exists(x.SourceFolder)).ToList();
+            if (tasksWithSourceFoldersDoesNotExist.Count > 0)
             {
-                foreach (var folder in foldersDoNotExist)
+                foreach (var task in tasksWithSourceFoldersDoesNotExist)
                 {
-                    logger.LogError("Source folder does exist: {RootFolder}", folder);
+                    logger.LogError("Task with source folder does exist: {RootFolder}", task.SourceFolder);
                 }
                 return false;
             }
@@ -99,6 +101,21 @@ namespace SyncRoo.Core
             foreach (var task in profile.Tasks.Where(x => x.IsEnabled && string.IsNullOrWhiteSpace(x.BatchFolder)))
             {
                 task.BatchFolder = syncSettings.BatchFolder;
+            }
+
+            foreach (var task in profile.Tasks.Where(x => string.IsNullOrWhiteSpace(x.Rule)))
+            {
+                task.Rule ??= Rules.Standard;
+            }
+
+            var tasksWithInvalidRule = profile.Tasks.Where(x => x.IsEnabled && x.Rule != Rules.Standard && x.Rule != Rules.Newer && x.Rule != Rules.Larger).ToList();
+            if (tasksWithInvalidRule.Count > 0)
+            {
+                foreach (var task in tasksWithInvalidRule)
+                {
+                    logger.LogError("Task with invalid rule: {Rule}, source folder: {RootFolder}", task.Rule, task.SourceFolder);
+                }
+                return false;
             }
 
             return true;
@@ -122,18 +139,20 @@ namespace SyncRoo.Core
                         {
                             RootFolder = task.SourceFolder,
                             FileMode = SyncFileMode.Source,
-                            FilePatterns = task.FilePatterns
+                            FilePatterns = task.FilePatterns,
+                            Rule = task.Rule
                         }, syncReport);
 
                         await ScanFiles(new ScanTaskDto
                         {
                             RootFolder = task.TargetFolder,
                             FileMode = SyncFileMode.Target,
-                            FilePatterns = task.FilePatterns
+                            FilePatterns = task.FilePatterns,
+                            Rule = task.Rule
                         }, syncReport);
                         break;
                     case Operations.Process:
-                        await ProcessPendingFiles();
+                        await ProcessPendingFiles(task);
                         break;
                     case Operations.Run:
                         await GenerateAndRunBatchFiles(task, syncReport);
@@ -146,17 +165,19 @@ namespace SyncRoo.Core
                 {
                     RootFolder = task.SourceFolder,
                     FileMode = SyncFileMode.Source,
-                    FilePatterns = task.FilePatterns
+                    FilePatterns = task.FilePatterns,
+                    Rule = task.Rule
                 }, syncReport);
 
                 await ScanFiles(new ScanTaskDto
                 {
                     RootFolder = task.TargetFolder,
                     FileMode = SyncFileMode.Target,
-                    FilePatterns = task.FilePatterns
+                    FilePatterns = task.FilePatterns,
+                    Rule = task.Rule
                 }, syncReport);
 
-                await ProcessPendingFiles();
+                await ProcessPendingFiles(task);
 
                 await GenerateAndRunBatchFiles(task, syncReport);
             }
@@ -325,11 +346,11 @@ namespace SyncRoo.Core
             return batchResult;
         }
 
-        private async Task ProcessPendingFiles()
+        private async Task ProcessPendingFiles(SyncTaskDto task)
         {
             logger.LogInformation("Processing pending files...");
 
-            await fileStorageProvider.Run(syncSettings, commandOptions.DatabaseConnectionString, logger);
+            await fileStorageProvider.Run(syncSettings, commandOptions.DatabaseConnectionString, task, logger);
 
             logger.LogInformation("Processed pending files.");
         }
