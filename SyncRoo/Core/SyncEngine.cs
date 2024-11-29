@@ -13,7 +13,7 @@ namespace SyncRoo.Core
     public class SyncEngine(CommandOptions commandOptions, IOptions<AppSyncSettings> syncSettings, IFileStorageProvider fileStorageProvider, IEnumerable<IFileSourceProvider> fileSourceProviders, ILogger logger)
     {
         private readonly AppSyncSettings syncSettings = syncSettings.Value;
-        private readonly SyncReport syncReport = new();
+        private readonly SyncReport overallSyncReport = new();
         private readonly JsonSerializerOptions jsonOptions = new()
         {
             PropertyNameCaseInsensitive = true
@@ -21,6 +21,8 @@ namespace SyncRoo.Core
 
         public async Task Sync()
         {
+            overallSyncReport.StartedTime = DateTime.Now;
+
             if (!string.IsNullOrWhiteSpace(commandOptions.Profile))
             {
                 await ProcessProfile();
@@ -36,6 +38,10 @@ namespace SyncRoo.Core
                 };
                 await ProcessTask(task, commandOptions.AutoTeardown);
             }
+
+            overallSyncReport.FinishedTime = DateTime.Now;
+            
+            ProduceReport(overallSyncReport, ReportTypes.Overall);
         }
 
         private async Task ProcessProfile()
@@ -100,8 +106,10 @@ namespace SyncRoo.Core
 
         private async Task ProcessTask(SyncTaskDto task, bool autoTeardown)
         {
-            syncReport.Timer.Restart();
-            syncReport.StartedTime = DateTime.Now;
+            var syncReport = new SyncReport
+            {
+                StartedTime = DateTime.Now
+            };
 
             await fileStorageProvider.Initialize(commandOptions.DatabaseConnectionString, logger);
 
@@ -115,20 +123,20 @@ namespace SyncRoo.Core
                             RootFolder = task.SourceFolder,
                             FileMode = SyncFileMode.Source,
                             FilePatterns = task.FilePatterns
-                        });
+                        }, syncReport);
 
                         await ScanFiles(new ScanTaskDto
                         {
                             RootFolder = task.TargetFolder,
                             FileMode = SyncFileMode.Target,
                             FilePatterns = task.FilePatterns
-                        });
+                        }, syncReport);
                         break;
                     case Operations.Process:
                         await ProcessPendingFiles();
                         break;
                     case Operations.Run:
-                        await GenerateAndRunBatchFiles(task);
+                        await GenerateAndRunBatchFiles(task, syncReport);
                         break;
                 }
             }
@@ -139,18 +147,18 @@ namespace SyncRoo.Core
                     RootFolder = task.SourceFolder,
                     FileMode = SyncFileMode.Source,
                     FilePatterns = task.FilePatterns
-                });
+                }, syncReport);
 
                 await ScanFiles(new ScanTaskDto
                 {
                     RootFolder = task.TargetFolder,
                     FileMode = SyncFileMode.Target,
                     FilePatterns = task.FilePatterns
-                });
+                }, syncReport);
 
                 await ProcessPendingFiles();
 
-                await GenerateAndRunBatchFiles(task);
+                await GenerateAndRunBatchFiles(task, syncReport);
             }
 
             if (autoTeardown)
@@ -161,15 +169,20 @@ namespace SyncRoo.Core
             syncReport.FinishedTime = DateTime.Now;
             syncReport.Timer.Stop();
 
-            ProduceReport();
+            ProduceReport(syncReport, ReportTypes.Current);
+
+            overallSyncReport.ProcessedFileBytes += syncReport.ProcessedFileBytes;
+            overallSyncReport.ProcessedFileCount += syncReport.ProcessedFileCount;
+            overallSyncReport.SourceFileCount += syncReport.SourceFileCount;
+            overallSyncReport.TargetFileCount += syncReport.TargetFileCount;
         }
 
-        private void ProduceReport()
+        private void ProduceReport(SyncReport syncReport, string reportType)
         {
             syncReport.Timer.Stop();
 
             logger.LogInformation("");
-            logger.LogInformation("Sync report");
+            logger.LogInformation("{ReportType} report", reportType);
             logger.LogInformation("\tStart time: {StartTime}", syncReport.StartedTime);
             logger.LogInformation("\tFinish time: {FinishTime}", syncReport.FinishedTime);
             logger.LogInformation("\tDuration: {Duration}", syncReport.Timer.Elapsed.ToReadableTimespan());
@@ -193,9 +206,9 @@ namespace SyncRoo.Core
             logger.LogInformation("");
         }
 
-        private async Task GenerateAndRunBatchFiles(SyncTaskDto task)
+        private async Task GenerateAndRunBatchFiles(SyncTaskDto task, SyncReport syncReport)
         {
-            var batchResult = await GenerateBatchFiles(task);
+            var batchResult = await GenerateBatchFiles(task, syncReport);
 
             if (batchResult.Files.Count == 0)
             {
@@ -233,7 +246,7 @@ namespace SyncRoo.Core
             batchResult.Folder.SafeDeleteDirectory();
         }
 
-        private async Task<BatchFileDto> GenerateBatchFiles(SyncTaskDto task)
+        private async Task<BatchFileDto> GenerateBatchFiles(SyncTaskDto task, SyncReport syncReport)
         {
             const string DefaultBatchFolder = "Batch";
             using var connection = new SqlConnection(commandOptions.DatabaseConnectionString);
@@ -321,7 +334,7 @@ namespace SyncRoo.Core
             logger.LogInformation("Processed pending files.");
         }
 
-        private async Task ScanFiles(ScanTaskDto scanTask)
+        private async Task ScanFiles(ScanTaskDto scanTask, SyncReport syncReport)
         {
             var pendingFiles = new List<FileDto>();
             var totalFileCount = 0L;
@@ -368,10 +381,10 @@ namespace SyncRoo.Core
             switch (scanTask.FileMode)
             {
                 case SyncFileMode.Source:
-                    syncReport.SourceFileCount += totalFileCount;
+                    syncReport.SourceFileCount = totalFileCount;
                     break;
                 case SyncFileMode.Target:
-                    syncReport.TargetFileCount += totalFileCount;
+                    syncReport.TargetFileCount = totalFileCount;
                     break;
             }
 

@@ -5,6 +5,12 @@
         public const string All = "*.*";
     }
 
+    public static class ReportTypes
+    {
+        public const string Current = "Current";
+        public const string Overall = "Overall";
+    }
+
     public static class Operations
     {
         public const string Scan = "scan";
