@@ -1,10 +1,22 @@
-﻿
-using System.Globalization;
+﻿using System.Globalization;
+using System.IO.Enumeration;
 
 namespace SyncRoo.Utils
 {
     public static class FileUtils
     {
+        public static bool IsFilePatternMatched(this string file, List<string> filePatterns)
+        {
+            if (filePatterns == null
+                || (filePatterns.Count == 1 && filePatterns[0] == FilePatterns.All)
+                || filePatterns.Exists(x => FileSystemName.MatchesSimpleExpression(x, file)))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public static void SafeDeleteFile(this string file)
         {
             if (File.Exists(file))

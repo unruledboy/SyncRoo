@@ -2,7 +2,7 @@
 {
     public class BatchFileDto
     {
-        public List<string> Files { get; set; } = new List<string>();
+        public List<string> Files { get; set; } = [];
         public string Folder { get; set; }
     }
 }

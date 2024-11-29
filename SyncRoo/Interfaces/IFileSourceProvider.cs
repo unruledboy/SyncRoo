@@ -1,4 +1,6 @@
-﻿namespace SyncRoo.Interfaces
+﻿using SyncRoo.Models.Dtos;
+
+namespace SyncRoo.Interfaces
 {
     public interface IFileSourceProvider
     {
@@ -8,6 +10,6 @@
 
         void Init();
 
-        IEnumerable<FileInfo> Find(string folder);
+        IEnumerable<FileInfo> Find(ScanTaskDto task);
     }
 }

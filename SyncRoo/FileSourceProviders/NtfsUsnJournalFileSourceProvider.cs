@@ -1,5 +1,6 @@
 ﻿using EverythingSZ.QueryEngine;
 using SyncRoo.Interfaces;
+using SyncRoo.Models.Dtos;
 using SyncRoo.Utils;
 
 namespace SyncRoo.FileSourceProviders
@@ -11,9 +12,9 @@ namespace SyncRoo.FileSourceProviders
 
         public string Name => SourceProviders.UsnJournal;
 
-        public IEnumerable<FileInfo> Find(string folder)
+        public IEnumerable<FileInfo> Find(ScanTaskDto task)
         {
-            foreach (var file in cachedFiles.Where(x => x.StartsWith(folder, StringComparison.OrdinalIgnoreCase)))
+            foreach (var file in cachedFiles.Where(x => x.StartsWith(task.RootFolder, StringComparison.OrdinalIgnoreCase) && x.IsFilePatternMatched(task.FilePatterns)))
             {
                 yield return new FileInfo(file);
             }

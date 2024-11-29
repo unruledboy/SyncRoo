@@ -34,6 +34,8 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
 
   -b, --Batch           The intermediate folder for the file copy batch commands to be stored.
 
+  -f, --FilePatterns    (Default: *.*) The file patterns to be serched for.
+
   -o, --Operation       A specific operation to be run rather than the whole sync process.
 
   -m, --MultiThreads    (Default: 1) The number of threads the process will use to concurrenctly copy the files.

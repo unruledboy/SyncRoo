@@ -110,6 +110,7 @@ namespace SyncRoo.FileStorageProviders
 
             foreach (var chunkedFiles in files.Chunk(BatchValueSize))
             {
+                // Concatenating multiple values in one query is faster than individual calls.
                 var valueList = string.Join(',', chunkedFiles.Select(x => $"('{x.FileName}', {x.Size}, {Convert.ToInt64((x.ModifiedTime - DateTime.UnixEpoch).TotalSeconds)})"));
                 command.CommandText = @$"pragma journal_mode=OFF;
 INSERT INTO {tableName} (FileName, Size, ModifiedTime) VALUES {valueList}";

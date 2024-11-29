@@ -1,5 +1,10 @@
 ﻿namespace SyncRoo.Utils
 {
+    public static class FilePatterns
+    {
+        public const string All = "*.*";
+    }
+
     public static class Operations
     {
         public const string Scan = "scan";

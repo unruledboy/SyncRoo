@@ -13,6 +13,9 @@ namespace SyncRoo.Models
         [Option('b', "Batch", Required = false, HelpText = "The intermediate folder for the file copy batch commands to be stored.")]
         public string BatchFolder { get; set; }
 
+        [Option('f', "FilePatterns", Required = false, HelpText = "The file patterns to be serched for.", Default = "*.*")]
+        public List<string> FilePatterns { get; set; }
+
         [Option('o', "Operation", Required = false, HelpText = "A specific operation to be run rather than the whole sync process.")]
         public string Operation { get; set; }
 

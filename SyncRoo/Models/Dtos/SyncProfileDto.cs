@@ -2,6 +2,6 @@
 {
     public class ProfileDto
     {
-        public List<SyncTaskDto> Tasks { get; set; } = new List<SyncTaskDto>();
+        public List<SyncTaskDto> Tasks { get; set; } = [];
     }
 }

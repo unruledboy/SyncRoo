@@ -1,4 +1,5 @@
 ﻿using SyncRoo.Interfaces;
+using SyncRoo.Models.Dtos;
 using SyncRoo.Utils;
 
 namespace SyncRoo.FileSourceProviders
@@ -7,9 +8,9 @@ namespace SyncRoo.FileSourceProviders
     {
         public string Name => SourceProviders.Native;
 
-        public IEnumerable<FileInfo> Find(string folder)
+        public IEnumerable<FileInfo> Find(ScanTaskDto task)
         {
-            foreach (var file in Directory.EnumerateFiles(folder))
+            foreach (var file in Directory.EnumerateFiles(task.RootFolder).Where(x => x.IsFilePatternMatched(task.FilePatterns)))
             {
                 var fileInfo = new FileInfo(file);
 
