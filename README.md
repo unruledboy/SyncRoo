@@ -155,4 +155,4 @@ To download the latest version (currently 2022), please click [SQL Server 2022 E
 To isntall, follow the steps of the installation wizard.
 
 ## ToDos
-- Add support for file patterns
+- Support NTFS USN Journal. Currently the logic is implemented, but the build/architecture of the project must be Windows x86, otherwise the relevant Win32 API will fail.
