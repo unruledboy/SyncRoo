@@ -25,6 +25,8 @@ namespace SyncRoo.Core.FileSourceProviders
             logger.LogInformation("Sending request to scan {RemoteServer}...", server);
 
             var httpClient = httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(syncSettings.ProcessTimeoutInSeconds);
+
             var scanResponseMessage = await ScanFiles(scanTask, server, path, httpClient);
 
             if (!scanResponseMessage.IsSuccessStatusCode)
