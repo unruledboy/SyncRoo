@@ -11,6 +11,7 @@ namespace SyncRoo.Models
         public long TargetFileCount { get; set; }
         public long ProcessedFileCount { get; set; }
         public long ProcessedFileBytes { get; set; }
-
+        public string SourceFolder { get; set; }
+        public string TargetFolder { get; set; }
     }
 }

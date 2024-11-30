@@ -11,6 +11,7 @@ using SyncRoo.FileSourceProviders;
 using SyncRoo.FileStorageProviders;
 using SyncRoo.Interfaces;
 using SyncRoo.Models;
+using SyncRoo.ReportProducers;
 using SyncRoo.Utils;
 
 namespace SyncRoo
@@ -46,6 +47,9 @@ namespace SyncRoo
                     services.AddSingleton<IConfiguration>(configuration);
                     services.AddSingleton<IFileSourceProvider, NativeFileSourceProvider>();
                     services.AddSingleton<IFileSourceProvider, NtfsUsnJournalFileSourceProvider>();
+
+                    services.AddSingleton<IReportProducer, LogReportProducer>();
+                    services.AddSingleton<IReportProducer, FileReportProducer>();
 
                     switch (configuration["Sync:FilStorageProvider"]?.ToLowerInvariant())
                     {
@@ -87,7 +91,8 @@ namespace SyncRoo
                             var syncSettings = host.Services.GetService<IOptions<AppSyncSettings>>();
                             var fileStorageProvider = host.Services.GetService<IFileStorageProvider>();
                             var fileSourceProviders = host.Services.GetService<IEnumerable<IFileSourceProvider>>();
-                            var syncEngine = new SyncEngine(opts, syncSettings, fileStorageProvider, fileSourceProviders, logger);
+                            var reportProducers = host.Services.GetService<IEnumerable<IReportProducer>>();
+                            var syncEngine = new SyncEngine(opts, syncSettings, fileStorageProvider, fileSourceProviders, reportProducers, logger);
 
                             await syncEngine.Sync();
                         },

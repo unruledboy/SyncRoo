@@ -13,8 +13,8 @@
 
     public static class ReportTypes
     {
-        public const string Current = "Current";
-        public const string Overall = "Overall";
+        public const string Task = "Task";
+        public const string Summary = "Summary";
     }
 
     public static class Rules

@@ -1,6 +1,4 @@
 ﻿using CommandLine;
-using Microsoft.VisualBasic;
-using SyncRoo.Models.Dtos;
 using SyncRoo.Utils;
 
 namespace SyncRoo.Models

@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,7 +10,8 @@ using SyncRoo.Utils;
 
 namespace SyncRoo.Core
 {
-    public class SyncEngine(CommandOptions commandOptions, IOptions<AppSyncSettings> syncSettings, IFileStorageProvider fileStorageProvider, IEnumerable<IFileSourceProvider> fileSourceProviders, ILogger logger)
+    public class SyncEngine(CommandOptions commandOptions, IOptions<AppSyncSettings> syncSettings, IFileStorageProvider fileStorageProvider, IEnumerable<IFileSourceProvider> fileSourceProviders,
+        IEnumerable<IReportProducer> reportProducers, ILogger logger)
     {
         private readonly AppSyncSettings syncSettings = syncSettings.Value;
         private readonly SyncReport overallSyncReport = new();
@@ -22,11 +22,13 @@ namespace SyncRoo.Core
 
         public async Task Sync()
         {
+            string batchFolder;
+
             overallSyncReport.StartedTime = DateTime.Now;
 
             if (!string.IsNullOrWhiteSpace(commandOptions.Profile))
             {
-                await ProcessProfile();
+                batchFolder = await ProcessProfile();
             }
             else
             {
@@ -39,27 +41,38 @@ namespace SyncRoo.Core
                     Rule = commandOptions.Rule,
                     Limits = commandOptions.Limits?.ToList() ?? [],
                 };
-                await ProcessTask(task, commandOptions.AutoTeardown);
+
+                var batchResult = await ProcessTask(task, commandOptions.AutoTeardown);
+                batchFolder = batchResult.BatchFolder;
             }
 
             overallSyncReport.FinishedTime = DateTime.Now;
-            
-            ProduceReport(overallSyncReport, ReportTypes.Overall);
+
+            await ProduceReport(overallSyncReport, batchFolder, ReportTypes.Summary);
         }
 
-        private async Task ProcessProfile()
+        private async Task<string> ProcessProfile()
         {
             var result = ValidateProfile(out var profile);
 
             if (!result)
             {
-                return;
+                return default;
             }
+
+            string batchFolder = default;
 
             foreach (var task in profile.Tasks.Where(x => x.IsEnabled))
             {
-                await ProcessTask(task, true);
+                var batchResult = await ProcessTask(task, true);
+
+                if (string.IsNullOrWhiteSpace(batchFolder))
+                {
+                    batchFolder = batchResult.BatchFolder;
+                }
             }
+
+            return batchFolder;
         }
 
         private bool ValidateProfile(out ProfileDto profile)
@@ -135,14 +148,18 @@ namespace SyncRoo.Core
             return true;
         }
 
-        private async Task ProcessTask(SyncTaskDto task, bool autoTeardown)
+        private async Task<BatchResultDto> ProcessTask(SyncTaskDto task, bool autoTeardown)
         {
             var syncReport = new SyncReport
             {
-                StartedTime = DateTime.Now
+                StartedTime = DateTime.Now,
+                SourceFolder = task.SourceFolder,
+                TargetFolder = task.TargetFolder
             };
 
             await fileStorageProvider.Initialize(commandOptions.DatabaseConnectionString, logger);
+
+            BatchResultDto batchResult = default;
 
             if (!string.IsNullOrWhiteSpace(commandOptions.Operation))
             {
@@ -171,7 +188,7 @@ namespace SyncRoo.Core
                         await ProcessPendingFiles(task);
                         break;
                     case Operations.Run:
-                        await GenerateAndRunBatchFiles(task, syncReport);
+                        batchResult = await GenerateAndRunBatchFiles(task, syncReport);
                         break;
                 }
             }
@@ -197,7 +214,7 @@ namespace SyncRoo.Core
 
                 await ProcessPendingFiles(task);
 
-                await GenerateAndRunBatchFiles(task, syncReport);
+                batchResult = await GenerateAndRunBatchFiles(task, syncReport);
             }
 
             if (autoTeardown)
@@ -208,27 +225,19 @@ namespace SyncRoo.Core
             syncReport.FinishedTime = DateTime.Now;
             syncReport.Timer.Stop();
 
-            ProduceReport(syncReport, ReportTypes.Current);
+            await ProduceReport(syncReport, batchResult?.BatchFolder, ReportTypes.Task);
 
             overallSyncReport.ProcessedFileBytes += syncReport.ProcessedFileBytes;
             overallSyncReport.ProcessedFileCount += syncReport.ProcessedFileCount;
             overallSyncReport.SourceFileCount += syncReport.SourceFileCount;
             overallSyncReport.TargetFileCount += syncReport.TargetFileCount;
+
+            return batchResult;
         }
 
-        private void ProduceReport(SyncReport syncReport, string reportType)
+        private async Task ProduceReport(SyncReport syncReport, string batchFolder, string reportType)
         {
             syncReport.Timer.Stop();
-
-            logger.LogInformation("");
-            logger.LogInformation("{ReportType} report", reportType);
-            logger.LogInformation("\tStart time: {StartTime}", syncReport.StartedTime);
-            logger.LogInformation("\tFinish time: {FinishTime}", syncReport.FinishedTime);
-            logger.LogInformation("\tDuration: {Duration}", syncReport.Timer.Elapsed.ToReadableTimespan());
-            logger.LogInformation("\tSource file count: {SourceFileCount}", syncReport.SourceFileCount);
-            logger.LogInformation("\tTarget file count: {TargetFileCount}", syncReport.TargetFileCount);
-            logger.LogInformation("\tProcessed file count: {ProcessedFileCount}", syncReport.ProcessedFileCount);
-            logger.LogInformation("\tProcessed file size: {ProcessedFileSize}", FileUtils.FormatSize(syncReport.ProcessedFileBytes));
 
             var totalSeconds = syncReport.Timer.Elapsed.TotalSeconds;
             if (totalSeconds < 0)
@@ -239,13 +248,32 @@ namespace SyncRoo.Core
             var bytesPerSecond = Convert.ToInt64(syncReport.ProcessedFileBytes / totalSeconds);
             var filesPerSecond = Convert.ToInt64(syncReport.ProcessedFileCount / totalSeconds);
 
-            logger.LogInformation("\tProcess data speed: {ProcessSpeed}", $"{FileUtils.FormatSize(bytesPerSecond)}/s");
-            logger.LogInformation("\tProcess file speed: {ProcessSpeed}", $"{filesPerSecond} files/s");
-            logger.LogInformation("");
-            logger.LogInformation("");
+            var items = new List<string>
+            {
+                $"Start time: {syncReport.StartedTime}",
+                $"Finish time: {syncReport.FinishedTime}",
+                $"Duration: {syncReport.Timer.Elapsed.ToReadableTimespan()}",
+                $"Source file count: {syncReport.SourceFileCount}",
+                $"Target file count: {syncReport.TargetFileCount}",
+                $"Processed file count: {syncReport.ProcessedFileCount}",
+                $"Processed file size: {FileUtils.FormatSize(syncReport.ProcessedFileBytes)}",
+                $"Process data speed: {FileUtils.FormatSize(bytesPerSecond)}/s",
+                $"Process file speed: {filesPerSecond} files/s"
+            };
+
+            if (!string.IsNullOrWhiteSpace(syncReport.SourceFolder))
+            {
+                items.Insert(0, $"Source Folder: {syncReport.SourceFolder}");
+                items.Insert(1, $"Target Folder: {syncReport.TargetFolder}");
+            }
+
+            foreach (var reportProducer in reportProducers)
+            {
+                await reportProducer.Write(overallSyncReport.StartedTime, reportType, batchFolder, items);
+            }
         }
 
-        private async Task GenerateAndRunBatchFiles(SyncTaskDto task, SyncReport syncReport)
+        private async Task<BatchResultDto> GenerateAndRunBatchFiles(SyncTaskDto task, SyncReport syncReport)
         {
             var batchResult = await GenerateBatchFiles(task, syncReport);
 
@@ -282,14 +310,18 @@ namespace SyncRoo.Core
                 }
             });
 
-            batchResult.Folder.SafeDeleteDirectory();
+            batchResult.RunFolder.SafeDeleteDirectory();
+
+            logger.LogInformation("Cleaned up batch folder {BatchFolder}.", batchResult.RunFolder);
+
+            return batchResult;
         }
 
-        private async Task<BatchFileDto> GenerateBatchFiles(SyncTaskDto task, SyncReport syncReport)
+        private async Task<BatchResultDto> GenerateBatchFiles(SyncTaskDto task, SyncReport syncReport)
         {
             const string DefaultBatchFolder = "Batch";
             using var connection = new SqlConnection(commandOptions.DatabaseConnectionString);
-            var batchResult = new BatchFileDto();
+            var batchResult = new BatchResultDto();
             var batchFolder = task.BatchFolder;
 
             if (string.IsNullOrWhiteSpace(batchFolder))
@@ -312,7 +344,8 @@ namespace SyncRoo.Core
                 Directory.CreateDirectory(batchRunFolder);
             }
 
-            batchResult.Folder = batchRunFolder;
+            batchResult.BatchFolder = batchFolder;
+            batchResult.RunFolder = batchRunFolder;
 
             logger.LogInformation("Batch files will be generated in {BatchFolder} for this run...", batchRunFolder);
 

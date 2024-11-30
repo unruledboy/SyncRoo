@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO.Enumeration;
+﻿using System.IO.Enumeration;
 
 namespace SyncRoo.Utils
 {
