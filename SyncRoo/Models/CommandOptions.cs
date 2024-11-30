@@ -20,7 +20,7 @@ namespace SyncRoo.Models
         [Option('o', "Operation", Required = false, HelpText = "A specific operation to be run rather than the whole sync process.")]
         public string Operation { get; set; }
 
-        [Option('m', "MultiThreads", Required = false, HelpText = "The number of threads the process will use to concurrenctly copy the files.", Default = 1)]
+        [Option('m', "MultiThreads", Required = false, HelpText = "The number of threads the process will use to concurrenctly copy the files.", Default = 5)]
         public int MultiThreads { get; set; }
 
         [Option('d', "Database", Required = false, HelpText = "The database connection string.")]

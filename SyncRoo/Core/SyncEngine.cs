@@ -375,7 +375,9 @@ namespace SyncRoo.Core
 
                 lastId = result[^1].Id;
 
-                var batchContent = string.Join("\r\n", result.Select(x =>
+                var batchContent = new StringBuilder();
+                batchContent.AppendLine("chcp 65001");
+                batchContent.AppendLine(string.Join("\r\n", result.Select(x =>
                 {
                     var sourceFile = Path.Combine(task.SourceFolder, x.FileName);
                     var targetFile = Path.Combine(task.TargetFolder, x.FileName);
@@ -383,10 +385,10 @@ namespace SyncRoo.Core
                     var command = $"COPY \"{sourceFile}\" \"{targetFile}\" /y";
 
                     return command;
-                }));
+                })));
 
                 var batchFile = Path.Combine(batchRunFolder, $"{batchId}.bat");
-                await File.WriteAllTextAsync(batchFile, batchContent, Encoding.UTF8);
+                await File.WriteAllTextAsync(batchFile, batchContent.ToString());
 
                 batchResult.Files.Add(batchFile);
 

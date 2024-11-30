@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 using SyncRoo.Interfaces;
 using SyncRoo.Models;
 using SyncRoo.Models.Dtos;
@@ -8,9 +9,9 @@ namespace SyncRoo.FileStorageProviders
 {
     public class InMemoryFileStorageProvider : IFileStorageProvider
     {
-        private readonly Dictionary<string, FileDto> sourceFiles = [];
-        private readonly Dictionary<string, FileDto> targetFiles = [];
-        private readonly List<PendingFileDto> pendingFiles = [];
+        private readonly ConcurrentDictionary<string, FileDto> sourceFiles = [];
+        private readonly ConcurrentDictionary<string, FileDto> targetFiles = [];
+        private readonly ConcurrentBag<PendingFileDto> pendingFiles = [];
 
         public async Task<long> GetPendingFileCount(string connectionString)
             => await Task.FromResult(pendingFiles.Count);

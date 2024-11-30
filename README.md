@@ -38,7 +38,7 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
 
   -o, --Operation       A specific operation to be run rather than the whole sync process.
 
-  -m, --MultiThreads    (Default: 1) The number of threads the process will use to concurrenctly copy the files.
+  -m, --MultiThreads    (Default: 5) The number of threads the process will use to concurrenctly copy the files.
 
   -d, --Database        The database connection string.
 
@@ -193,3 +193,4 @@ To isntall, follow the steps of the installation wizard.
 
 ## ToDos
 - Support NTFS USN Journal. Currently the logic is implemented, but the build/architecture of the project must be Windows x86, otherwise the relevant Win32 API will fail.
+- Support multithreads for processing different folders parallelly. Currently it only support running multiple batch files concurrently.
