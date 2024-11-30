@@ -75,9 +75,9 @@ namespace SyncRoo.Server
                 return Results.Ok(await scanService.GetFiles(getFileRequest));
             });
 
-            app.MapPost("/teardown", async (ScanHandler scanService) =>
+            app.MapPost("/teardown", async (ScanHandler scanService, TeardownRequestDto teardownRequest) =>
             {
-                await scanService.Teardown();
+                await scanService.Teardown(teardownRequest);
 
                 return Results.Ok();
             });

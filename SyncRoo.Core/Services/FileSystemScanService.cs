@@ -9,7 +9,7 @@ namespace SyncRoo.Core.Services
     public class FileSystemScanService : IScanService
     {
         public async Task<ScanResultDto> Scan(ScanTaskDto scanTask, SyncReport syncReport, IFileStorageProvider fileStorageProvider, AppSyncSettings syncSettings,
-            IEnumerable<IFileSourceProvider> fileSourceProviders, CommandOptions commandOptions, ILogger<IReportProducer> logger)
+            IEnumerable<IFileSourceProvider> fileSourceProviders, CommandOptions commandOptions, ILogger logger)
         {
             var pendingFiles = new List<FileDto>();
             var totalFileCount = 0L;
@@ -74,7 +74,7 @@ namespace SyncRoo.Core.Services
             };
         }
 
-        private static IAsyncEnumerable<FileDto> GetFileSource(ScanTaskDto scanTask, IEnumerable<IFileSourceProvider> fileSourceProviders, CommandOptions commandOptions, AppSyncSettings syncSettings, ILogger<IReportProducer> logger)
+        private static IAsyncEnumerable<FileDto> GetFileSource(ScanTaskDto scanTask, IEnumerable<IFileSourceProvider> fileSourceProviders, CommandOptions commandOptions, AppSyncSettings syncSettings, ILogger logger)
         {
             logger.LogInformation("Initializing file source provider...");
 

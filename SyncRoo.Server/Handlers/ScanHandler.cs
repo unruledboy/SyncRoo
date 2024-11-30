@@ -30,7 +30,13 @@ namespace SyncRoo.Server.Handlers
         public async Task<List<FileDto>> GetFiles(GetFileRequestDto request)
             => await fileStorageProvider.GetTargetFiles(databaseConnectionString, request.Page * request.Size, request.Size);
 
-        public async Task Teardown()
-            => await fileStorageProvider.Teardown(databaseConnectionString, logger);
+        public async Task Teardown(TeardownRequestDto teardownRequest)
+        {
+            logger.LogInformation("Tearing down file info in {RootFolder}...", teardownRequest.Folder);
+
+            await fileStorageProvider.Teardown(databaseConnectionString, logger);
+
+            logger.LogInformation("File info in {RootFolder} torn down.", teardownRequest.Folder);
+        }
     }
 }
