@@ -13,7 +13,7 @@ namespace SyncRoo.Interfaces
 
         Task PrepareFileStorage(string connectionString, SyncFileMode fileMode, ILogger logger);
 
-        Task Save(AppSyncSettings syncSettings, string connectionString, List<FileDto> files, SyncFileMode fileMode, ILogger logger);
+        Task Save(AppSyncSettings syncSettings, string connectionString, long runtimeTotal, List<FileDto> files, SyncFileMode fileMode, ILogger logger);
 
         Task Run(AppSyncSettings syncSettings, string connectionString, SyncTaskDto task, ILogger logger);
 

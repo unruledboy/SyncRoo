@@ -402,18 +402,18 @@ namespace SyncRoo.Core
                     ModifiedTime = fileInfo.LastWriteTime
                 });
 
+                totalFileCount++;
+
                 if (pendingFiles.Count % syncSettings.FileBatchSize == 0)
                 {
-                    await fileStorageProvider.Save(syncSettings, commandOptions.DatabaseConnectionString, pendingFiles, scanTask.FileMode, logger);
+                    await fileStorageProvider.Save(syncSettings, commandOptions.DatabaseConnectionString, totalFileCount, pendingFiles, scanTask.FileMode, logger);
                     pendingFiles.Clear();
                 }
-
-                totalFileCount++;
             }
 
             if (pendingFiles.Count > 0)
             {
-                await fileStorageProvider.Save(syncSettings, commandOptions.DatabaseConnectionString, pendingFiles, scanTask.FileMode, logger);
+                await fileStorageProvider.Save(syncSettings, commandOptions.DatabaseConnectionString, totalFileCount, pendingFiles, scanTask.FileMode, logger);
                 pendingFiles.Clear();
             }
 
@@ -439,7 +439,7 @@ namespace SyncRoo.Core
             fileSourceProvider ??= fileSourceProviders.First(x => x.Name == SourceProviders.Native);
             fileSourceProvider.Init();
 
-            logger.LogInformation("Initialized file source provider.");
+            logger.LogInformation("Initialized file source provider. Searching for files...");
 
             return fileSourceProvider.Find(scanTask);
         }

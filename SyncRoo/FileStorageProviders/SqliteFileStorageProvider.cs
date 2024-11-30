@@ -92,7 +92,7 @@ namespace SyncRoo.FileStorageProviders
             await connection.ExecuteAsync(SqlText, new { task.Rule }, commandTimeout: syncSettings.CommandTimeoutInSeconds);
         }
 
-        public async Task Save(AppSyncSettings syncSettings, string connectionString, List<FileDto> files, SyncFileMode fileMode, ILogger logger)
+        public async Task Save(AppSyncSettings syncSettings, string connectionString, long runtimeTotal, List<FileDto> files, SyncFileMode fileMode, ILogger logger)
         {
             if (fileMode != SyncFileMode.Source && fileMode != SyncFileMode.Target)
             {
@@ -125,7 +125,7 @@ INSERT INTO {tableName} (FileName, Size, ModifiedTime) VALUES {valueList}";
 
             await transaction.CommitAsync();
 
-            logger.LogInformation("Saved {FileCount} files.", files.Count);
+            logger.LogInformation("Saved metadata of {FileCount} files, totally {TotalFileCount} files found.", files.Count, runtimeTotal);
 
             // This is to avoid hogging the CPU
             await Task.Delay(syncSettings.OperationDelayInMs);
