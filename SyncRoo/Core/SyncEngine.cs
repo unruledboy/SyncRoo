@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
@@ -385,7 +386,7 @@ namespace SyncRoo.Core
                 }));
 
                 var batchFile = Path.Combine(batchRunFolder, $"{batchId}.bat");
-                await File.WriteAllTextAsync(batchFile, batchContent);
+                await File.WriteAllTextAsync(batchFile, batchContent, Encoding.UTF8);
 
                 batchResult.Files.Add(batchFile);
 
