@@ -7,12 +7,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Serilog;
 using SyncRoo.Core;
-using SyncRoo.FileSourceProviders;
-using SyncRoo.FileStorageProviders;
-using SyncRoo.Interfaces;
-using SyncRoo.Models;
-using SyncRoo.ReportProducers;
-using SyncRoo.Utils;
+using SyncRoo.Core.FileSourceProviders;
+using SyncRoo.Core.FileStorageProviders;
+using SyncRoo.Core.Interfaces;
+using SyncRoo.Core.Models;
+using SyncRoo.Core.ReportProducers;
+using SyncRoo.Core.Services;
+using SyncRoo.Core.Utils;
 
 namespace SyncRoo
 {
@@ -45,6 +46,8 @@ namespace SyncRoo
                 .ConfigureServices((x, services) =>
                 {
                     services.AddSingleton<IConfiguration>(configuration);
+                    services.AddSingleton<IScanService, FileSystemScanService>();
+
                     services.AddSingleton<IFileSourceProvider, NativeFileSourceProvider>();
                     services.AddSingleton<IFileSourceProvider, NtfsUsnJournalFileSourceProvider>();
 
@@ -81,7 +84,7 @@ namespace SyncRoo
                         async opts =>
                         {
                             var configuration = host.Services.GetService<IConfiguration>();
-                            var logger = host.Services.GetService<ILogger<SyncEngine>>();
+                            var logger = host.Services.GetService<ILogger<IReportProducer>>();
 
                             if (!ValidateOptions(opts, configuration, logger))
                             {
@@ -92,7 +95,8 @@ namespace SyncRoo
                             var fileStorageProvider = host.Services.GetService<IFileStorageProvider>();
                             var fileSourceProviders = host.Services.GetService<IEnumerable<IFileSourceProvider>>();
                             var reportProducers = host.Services.GetService<IEnumerable<IReportProducer>>();
-                            var syncEngine = new SyncEngine(opts, syncSettings, fileStorageProvider, fileSourceProviders, reportProducers, logger);
+                            var scanService = host.Services.GetService<IScanService>();
+                            var syncEngine = new SyncEngine(opts, syncSettings, fileStorageProvider, fileSourceProviders, reportProducers, scanService, logger);
 
                             await syncEngine.Sync();
                         },
@@ -107,10 +111,9 @@ namespace SyncRoo
             Log.Information("Run finished");
         }
 
-        private static bool ValidateOptions(CommandOptions opts, IConfiguration configuration, ILogger<SyncEngine> logger)
+        private static bool ValidateOptions(CommandOptions opts, IConfiguration configuration, ILogger<IReportProducer> logger)
         {
-            const string ConnectionStringDatabase = "Database";
-            var databaseConnectionString = configuration.GetConnectionString(ConnectionStringDatabase);
+            var databaseConnectionString = configuration.GetConnectionString(ConnectionStrings.Database);
 
             if (string.IsNullOrWhiteSpace(opts.SourceFolder) && string.IsNullOrWhiteSpace(opts.TargetFolder) && string.IsNullOrWhiteSpace(opts.Profile))
             {

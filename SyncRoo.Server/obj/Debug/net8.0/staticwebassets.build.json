@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "ydDgQlAT4ES9jEet8p3VeC2BzPbpCcYCjryxZZzS6QE=",
+  "Source": "SyncRoo.Server",
+  "BasePath": "_content/SyncRoo.Server",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

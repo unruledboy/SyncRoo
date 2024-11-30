@@ -8,11 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="FastMember" Version="1.5.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
@@ -24,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EverythingSZ\EverythingSZ.csproj" />
+    <ProjectReference Include="..\SyncRoo.Core\SyncRoo.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,12 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="AppData\FileStorage\SqliteFileStorageProvider.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="AppData\FileStorage\SqlServerFileStorageProvider.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -1,0 +1,21 @@
+﻿CREATE TABLE IF NOT EXISTS "PendingFile" (
+	"Id"	INTEGER NOT NULL,
+	"FileName"	TEXT NOT NULL,
+	"Size"	INTEGER NOT NULL,
+	"ModifiedTime"	INTEGER NOT NULL,
+	PRIMARY KEY("Id" AUTOINCREMENT)
+);
+
+CREATE TABLE IF NOT EXISTS "SourceFile" (
+	"FileName"	TEXT NOT NULL,
+	"Size"	INTEGER NOT NULL,
+	"ModifiedTime"	INTEGER NOT NULL,
+	PRIMARY KEY("FileName")
+);
+
+CREATE TABLE IF NOT EXISTS "TargetFile" (
+	"FileName"	TEXT NOT NULL,
+	"Size"	INTEGER NOT NULL,
+	"ModifiedTime"	INTEGER NOT NULL,
+	PRIMARY KEY("FileName")
+);

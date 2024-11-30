@@ -4,15 +4,15 @@ using System.Text.Json;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SyncRoo.Interfaces;
-using SyncRoo.Models;
-using SyncRoo.Models.Dtos;
-using SyncRoo.Utils;
+using SyncRoo.Core.Interfaces;
+using SyncRoo.Core.Models;
+using SyncRoo.Core.Models.Dtos;
+using SyncRoo.Core.Utils;
 
 namespace SyncRoo.Core
 {
     public class SyncEngine(CommandOptions commandOptions, IOptions<AppSyncSettings> syncSettings, IFileStorageProvider fileStorageProvider, IEnumerable<IFileSourceProvider> fileSourceProviders,
-        IEnumerable<IReportProducer> reportProducers, ILogger logger)
+        IEnumerable<IReportProducer> reportProducers, IScanService scanService, ILogger<IReportProducer> logger)
     {
         private readonly AppSyncSettings syncSettings = syncSettings.Value;
         private readonly SyncReport overallSyncReport = new();
@@ -236,6 +236,9 @@ namespace SyncRoo.Core
             return batchResult;
         }
 
+        private async Task ScanFiles(ScanTaskDto scanTask, SyncReport syncReport)
+            => await scanService.Scan(scanTask, syncReport, fileStorageProvider, syncSettings, fileSourceProviders, commandOptions, logger);
+
         private async Task ProduceReport(SyncReport syncReport, string batchFolder, string reportType)
         {
             syncReport.Timer.Stop();
@@ -407,77 +410,6 @@ namespace SyncRoo.Core
             await fileStorageProvider.Run(syncSettings, commandOptions.DatabaseConnectionString, task, logger);
 
             logger.LogInformation("Processed pending files.");
-        }
-
-        private async Task ScanFiles(ScanTaskDto scanTask, SyncReport syncReport)
-        {
-            var pendingFiles = new List<FileDto>();
-            var totalFileCount = 0L;
-
-            logger.LogInformation("Scanning {FileMode} files in {RootFolder}...", scanTask.FileMode, scanTask.RootFolder);
-
-            if (!Directory.Exists(scanTask.RootFolder))
-            {
-                Directory.CreateDirectory(scanTask.RootFolder);
-
-                logger.LogInformation("{RootFolder} does not exist. Created automatically.", scanTask.RootFolder);
-
-                return;
-            }
-
-            await fileStorageProvider.PrepareFileStorage(commandOptions.DatabaseConnectionString, scanTask.FileMode, logger);
-
-            var fileSource = GetFileSource(scanTask);
-
-            foreach (var fileInfo in fileSource)
-            {
-                pendingFiles.Add(new FileDto
-                {
-                    FileName = fileInfo.FullName[(scanTask.RootFolder.Length + 1)..],
-                    Size = fileInfo.Length,
-                    ModifiedTime = fileInfo.LastWriteTime
-                });
-
-                totalFileCount++;
-
-                if (pendingFiles.Count % syncSettings.FileBatchSize == 0)
-                {
-                    await fileStorageProvider.Save(syncSettings, commandOptions.DatabaseConnectionString, totalFileCount, pendingFiles, scanTask.FileMode, logger);
-                    pendingFiles.Clear();
-                }
-            }
-
-            if (pendingFiles.Count > 0)
-            {
-                await fileStorageProvider.Save(syncSettings, commandOptions.DatabaseConnectionString, totalFileCount, pendingFiles, scanTask.FileMode, logger);
-                pendingFiles.Clear();
-            }
-
-            switch (scanTask.FileMode)
-            {
-                case SyncFileMode.Source:
-                    syncReport.SourceFileCount = totalFileCount;
-                    break;
-                case SyncFileMode.Target:
-                    syncReport.TargetFileCount = totalFileCount;
-                    break;
-            }
-
-            logger.LogInformation("Scanned {FileMode} and found {FileCount} files in {RootFolder}.", scanTask.FileMode, totalFileCount, scanTask.RootFolder);
-        }
-
-        private IEnumerable<FileInfo> GetFileSource(ScanTaskDto scanTask)
-        {
-            logger.LogInformation("Initializing file source provider...");
-
-            var fileSourceProvider = fileSourceProviders.FirstOrDefault(x => x.IsSupported(scanTask.RootFolder, commandOptions.UsnJournal));
-
-            fileSourceProvider ??= fileSourceProviders.First(x => x.Name == SourceProviders.Native);
-            fileSourceProvider.Init();
-
-            logger.LogInformation("Initialized file source provider. Searching for files...");
-
-            return fileSourceProvider.Find(scanTask);
         }
     }
 }
