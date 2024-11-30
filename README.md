@@ -194,3 +194,4 @@ To isntall, follow the steps of the installation wizard.
 ## ToDos
 - Support NTFS USN Journal. Currently the logic is implemented, but the build/architecture of the project must be Windows x86, otherwise the relevant Win32 API will fail.
 - Support multithreads for processing different folders parallelly. Currently it only support running multiple batch files concurrently.
+- Cross machine sync using network protocols. Currently if we search files for UNC path or mapped network drive, they are all over SMB protocol, and the performance is not good. We can run dedicated instance in each machine, and leverage the native API to gain maximum performance, then send the result over network. Then the performance should be a lot better.
