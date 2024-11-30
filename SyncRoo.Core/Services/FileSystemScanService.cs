@@ -30,15 +30,15 @@ namespace SyncRoo.Core.Services
 
             await fileStorageProvider.PrepareFileStorage(commandOptions.DatabaseConnectionString, scanTask.FileMode, logger);
 
-            var fileSource = GetFileSource(scanTask, fileSourceProviders, commandOptions, logger);
+            var fileSource = GetFileSource(scanTask, fileSourceProviders, commandOptions, syncSettings, logger);
 
-            foreach (var fileInfo in fileSource)
+            await foreach (var fileInfo in fileSource)
             {
                 pendingFiles.Add(new FileDto
                 {
-                    FileName = fileInfo.FullName[(scanTask.RootFolder.Length + 1)..],
-                    Size = fileInfo.Length,
-                    ModifiedTime = fileInfo.LastWriteTime
+                    FileName = fileInfo.FileName[(scanTask.RootFolder.Length + 1)..],
+                    Size = fileInfo.Size,
+                    ModifiedTime = fileInfo.ModifiedTime
                 });
 
                 totalFileCount++;
@@ -74,7 +74,7 @@ namespace SyncRoo.Core.Services
             };
         }
 
-        private static IEnumerable<FileInfo> GetFileSource(ScanTaskDto scanTask, IEnumerable<IFileSourceProvider> fileSourceProviders, CommandOptions commandOptions, ILogger<IReportProducer> logger)
+        private static IAsyncEnumerable<FileDto> GetFileSource(ScanTaskDto scanTask, IEnumerable<IFileSourceProvider> fileSourceProviders, CommandOptions commandOptions, AppSyncSettings syncSettings, ILogger<IReportProducer> logger)
         {
             logger.LogInformation("Initializing file source provider...");
 
@@ -85,7 +85,7 @@ namespace SyncRoo.Core.Services
 
             logger.LogInformation("Initialized file source provider. Searching for files...");
 
-            return fileSourceProvider.Find(scanTask);
+            return fileSourceProvider.Find(scanTask, syncSettings);
         }
     }
 }

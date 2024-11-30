@@ -1,6 +1,4 @@
-﻿using SyncRoo.Core.Models;
-
-namespace SyncRoo.Core.Models.Dtos
+﻿namespace SyncRoo.Core.Models.Dtos
 {
     public class ReportDto
     {

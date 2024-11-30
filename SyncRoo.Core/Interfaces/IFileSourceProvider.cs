@@ -1,4 +1,5 @@
-﻿using SyncRoo.Core.Models.Dtos;
+﻿using SyncRoo.Core.Models;
+using SyncRoo.Core.Models.Dtos;
 
 namespace SyncRoo.Core.Interfaces
 {
@@ -10,6 +11,6 @@ namespace SyncRoo.Core.Interfaces
 
         void Init();
 
-        IEnumerable<FileInfo> Find(ScanTaskDto scanTask);
+        IAsyncEnumerable<FileDto> Find(ScanTaskDto scanTask, AppSyncSettings syncSettings);
     }
 }

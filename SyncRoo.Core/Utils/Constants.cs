@@ -1,5 +1,10 @@
 ﻿namespace SyncRoo.Core.Utils
 {
+    public static class SyncProtocols
+    {
+        public const string Network = "Network";
+    }
+
     public static class ConnectionStrings
     {
         public const string Database = "Database";

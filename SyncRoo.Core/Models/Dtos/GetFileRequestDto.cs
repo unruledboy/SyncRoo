@@ -1,4 +1,4 @@
-﻿namespace SyncRoo.Server.Models
+﻿namespace SyncRoo.Core.Models.Dtos
 {
     public class GetFileRequestDto
     {

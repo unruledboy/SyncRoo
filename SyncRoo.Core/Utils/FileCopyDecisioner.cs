@@ -1,9 +1,33 @@
 ﻿using System.IO.Enumeration;
+using SyncRoo.Core.Models.Dtos;
 
 namespace SyncRoo.Core.Utils
 {
     public static class FileCopyDecisioner
     {
+        public static bool ValidateNetworkFolder(this string folder, out string server, out string path)
+        {
+            const char ProtocolSeparator = ':';
+            const char PathSeparator = '/';
+            var prefix = $"{SyncProtocols.Network}{ProtocolSeparator}";
+            var isNetworkFolder = folder.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+
+            if (isNetworkFolder)
+            {
+                var parts = folder[prefix.Length..].Split(PathSeparator);
+
+                server = parts[0];
+                path = string.Join(Environment.NewLine, parts.Skip(1));
+            }
+            else
+            {
+                server = default;
+                path = default;
+            }
+
+            return isNetworkFolder;
+        }
+
         public static bool IsFilePatternMatched(this string file, List<string> filePatterns)
         {
             if (filePatterns == null
@@ -17,7 +41,7 @@ namespace SyncRoo.Core.Utils
             return false;
         }
 
-        public static bool IsFileLimitMatched(this FileInfo fileInfo, List<string> limits)
+        public static bool IsFileLimitMatched(this FileDto fileInfo, List<string> limits)
         {
             if (limits == null
                 || limits.Count == 0
@@ -94,7 +118,7 @@ namespace SyncRoo.Core.Utils
             return false;
         }
 
-        private static bool MatchFileLimit(string limit, FileInfo fileInfo)
+        private static bool MatchFileLimit(string limit, FileDto fileInfo)
         {
             if (limit.IsValidFileLimit(out var type, out var value))
             {
@@ -105,17 +129,17 @@ namespace SyncRoo.Core.Utils
                         var size = (long)value;
 
                         if (type == LimitTypes.SizeMin)
-                            return fileInfo.Length >= size;
+                            return fileInfo.Size >= size;
                         else
-                            return fileInfo.Length <= size;
+                            return fileInfo.Size <= size;
                     case LimitTypes.DateMin:
                     case LimitTypes.DateMax:
                         var date = (DateTime)value;
 
                         if (type == LimitTypes.DateMin)
-                            return fileInfo.LastWriteTime >= date;
+                            return fileInfo.ModifiedTime >= date;
                         else
-                            return fileInfo.LastWriteTime <= date;
+                            return fileInfo.ModifiedTime <= date;
                 }
             }
 

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using SyncRoo.Core;
 using SyncRoo.Core.Interfaces;
 
 namespace SyncRoo.Core.ReportProducers

@@ -1,5 +1,6 @@
 ﻿using EverythingSZ.QueryEngine;
 using SyncRoo.Core.Interfaces;
+using SyncRoo.Core.Models;
 using SyncRoo.Core.Models.Dtos;
 using SyncRoo.Core.Utils;
 
@@ -12,15 +13,22 @@ namespace SyncRoo.Core.FileSourceProviders
 
         public string Name => SourceProviders.UsnJournal;
 
-        public IEnumerable<FileInfo> Find(ScanTaskDto scanTask)
+        public async IAsyncEnumerable<FileDto> Find(ScanTaskDto scanTask, AppSyncSettings syncSettings)
         {
             foreach (var file in cachedFiles.Where(x => x.StartsWith(scanTask.RootFolder, StringComparison.OrdinalIgnoreCase) && x.IsFilePatternMatched(scanTask.FilePatterns)))
             {
                 var fileInfo = new FileInfo(file);
 
-                if (fileInfo.IsFileLimitMatched(scanTask.Limits))
+                var fileDto = new FileDto
                 {
-                    yield return fileInfo;
+                    FileName = fileInfo.FullName,
+                    Size = fileInfo.Length,
+                    ModifiedTime = fileInfo.LastWriteTime
+                };
+
+                if (fileDto.IsFileLimitMatched(scanTask.Limits))
+                {
+                    yield return await Task.FromResult(fileDto);
                 }
             }
         }
@@ -44,6 +52,11 @@ namespace SyncRoo.Core.FileSourceProviders
 
         public bool IsSupported(string folder, bool usnJournal)
         {
+            if (folder.ValidateNetworkFolder(out _, out _))
+            {
+                return false;
+            }
+
             if (SystemUtils.IsAdministrator() && usnJournal)
             {
                 const string FileSystemNTFS = "NTFS";

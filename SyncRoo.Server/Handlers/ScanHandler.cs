@@ -3,9 +3,8 @@ using SyncRoo.Core.Interfaces;
 using SyncRoo.Core.Models;
 using SyncRoo.Core.Models.Dtos;
 using SyncRoo.Core.Utils;
-using SyncRoo.Server.Models;
 
-namespace SyncRoo.Server.Core
+namespace SyncRoo.Server.Handlers
 {
     public class ScanHandler(IEnumerable<IFileSourceProvider> fileSourceProviders, IFileStorageProvider fileStorageProvider, IScanService scanService,
         IOptions<AppSyncSettings> syncSettings, IConfiguration configuration, ILogger<IReportProducer> logger)
