@@ -116,8 +116,7 @@ namespace SyncRoo.Core.FileStorageProviders
 			WHERE tf.FileName IS NULL
             OR (@Rule = 'standard' AND (sf.Size <> tf.Size OR sf.ModifiedTime <> tf.ModifiedTime))
 			OR (@Rule = 'newer' AND sf.ModifiedTime > tf.ModifiedTime)
-			OR (@Rule = 'larger' AND sf.Size > tf.Size)
-            ;";
+			OR (@Rule = 'larger' AND sf.Size > tf.Size);";
 
             await connection.ExecuteAsync(SqlText, new { task.Rule }, commandTimeout: syncSettings.CommandTimeoutInSeconds);
         }

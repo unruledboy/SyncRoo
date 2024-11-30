@@ -1,12 +1,12 @@
-﻿using System.Text;
+﻿using System.Net.Http.Json;
+using System.Net.Mime;
+using System.Text;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using SyncRoo.Core.Interfaces;
+using SyncRoo.Core.Models;
 using SyncRoo.Core.Models.Dtos;
 using SyncRoo.Core.Utils;
-using System.Text.Json;
-using System.Net.Mime;
-using System.Net.Http.Json;
-using SyncRoo.Core.Models;
-using Microsoft.Extensions.Logging;
 
 namespace SyncRoo.Core.FileSourceProviders
 {
@@ -24,18 +24,7 @@ namespace SyncRoo.Core.FileSourceProviders
             logger.LogInformation("Sending request to scan {RemoteServer}...", server);
 
             var httpClient = httpClientFactory.CreateClient();
-            var scanUrl = $"{server}/scan";
-            var remoteTask = new ScanTaskDto
-            {
-                RootFolder = path,
-                FileMode = scanTask.FileMode,
-                FilePatterns = scanTask.FilePatterns,
-                Limits = scanTask.Limits,
-                Rule = scanTask.Rule
-            };
-            var scanPayload = JsonSerializer.Serialize(remoteTask);
-            var scanContent = new StringContent(scanPayload, Encoding.UTF8, MediaTypeNames.Application.Json);
-            var scanResponseMessage = await httpClient.PostAsync(scanUrl, scanContent);
+            var scanResponseMessage = await ScanFiles(scanTask, server, path, httpClient);
 
             if (!scanResponseMessage.IsSuccessStatusCode)
             {
@@ -50,16 +39,7 @@ namespace SyncRoo.Core.FileSourceProviders
 
             for (var i = 0; i < scanResult.FileCount / syncSettings.FileBatchSize + 1; i++)
             {
-                logger.LogInformation("Sending request to get files from {RootFolder} on {RemoteServer}...", path, server);
-
-                var getUrl = $"{server}/get";
-                var getPayload = JsonSerializer.Serialize(new GetFileRequestDto
-                {
-                    Page = i,
-                    Size = syncSettings.FileBatchSize
-                });
-                var getContent = new StringContent(getPayload, Encoding.UTF8, MediaTypeNames.Application.Json);
-                var getResponseMessage = await httpClient.PostAsync(getUrl, getContent);
+                var getResponseMessage = await GetFiles(logger, syncSettings, server, path, httpClient, i);
 
                 if (!getResponseMessage.IsSuccessStatusCode)
                 {
@@ -85,6 +65,20 @@ namespace SyncRoo.Core.FileSourceProviders
                 }
             }
 
+            var teardownResponseMessage = await Teardown(logger, scanTask, server, path, httpClient);
+
+            if (!teardownResponseMessage.IsSuccessStatusCode)
+            {
+                logger.LogError("Request to teardown transient info {RemoteServer} failed: {ErrorMessage}", server, await teardownResponseMessage.Content.ReadAsStringAsync());
+
+                yield break;
+            }
+
+            logger.LogInformation("Transient info for {RootFolder} on {RemoteServer} torn down.", path, server);
+        }
+
+        private static async Task<HttpResponseMessage> Teardown(ILogger logger, ScanTaskDto scanTask, string server, string path, HttpClient httpClient)
+        {
             logger.LogInformation("Sending request to teardown transient info for {RootFolder} on {RemoteServer}...", path, server);
 
             var teardownUrl = $"{server}/teardown";
@@ -95,14 +89,41 @@ namespace SyncRoo.Core.FileSourceProviders
             var teardownContent = new StringContent(teardownPayload, Encoding.UTF8, MediaTypeNames.Application.Json);
             var teardownResponseMessage = await httpClient.PostAsync(teardownUrl, teardownContent);
 
-            if (!teardownResponseMessage.IsSuccessStatusCode)
+            return teardownResponseMessage;
+        }
+
+        private static async Task<HttpResponseMessage> GetFiles(ILogger logger, AppSyncSettings syncSettings, string server, string path, HttpClient httpClient, int page)
+        {
+            logger.LogInformation("Sending request to get files from {RootFolder} on {RemoteServer}...", path, server);
+
+            var getUrl = $"{server}/get";
+            var getPayload = JsonSerializer.Serialize(new GetFileRequestDto
             {
-                logger.LogError("Request to teardown transient info {RemoteServer} failed: {ErrorMessage}", server, await teardownResponseMessage.Content.ReadAsStringAsync());
+                Page = page,
+                Size = syncSettings.FileBatchSize
+            });
+            var getContent = new StringContent(getPayload, Encoding.UTF8, MediaTypeNames.Application.Json);
+            var getResponseMessage = await httpClient.PostAsync(getUrl, getContent);
 
-                yield break;
-            }
+            return getResponseMessage;
+        }
 
-            logger.LogInformation("Transient info for {RootFolder} on {RemoteServer} torn down.", path, server);
+        private static async Task<HttpResponseMessage> ScanFiles(ScanTaskDto scanTask, string server, string path, HttpClient httpClient)
+        {
+            var scanUrl = $"{server}/scan";
+            var remoteTask = new ScanTaskDto
+            {
+                RootFolder = path,
+                FileMode = scanTask.FileMode,
+                FilePatterns = scanTask.FilePatterns,
+                Limits = scanTask.Limits,
+                Rule = scanTask.Rule
+            };
+            var scanPayload = JsonSerializer.Serialize(remoteTask);
+            var scanContent = new StringContent(scanPayload, Encoding.UTF8, MediaTypeNames.Application.Json);
+            var scanResponseMessage = await httpClient.PostAsync(scanUrl, scanContent);
+
+            return scanResponseMessage;
         }
 
         public void Init()

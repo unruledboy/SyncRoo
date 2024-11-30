@@ -1,6 +1,6 @@
-﻿using SyncRoo.Core.Models.Dtos;
+﻿using Microsoft.Extensions.Logging;
 using SyncRoo.Core.Models;
-using Microsoft.Extensions.Logging;
+using SyncRoo.Core.Models.Dtos;
 
 namespace SyncRoo.Core.Interfaces
 {

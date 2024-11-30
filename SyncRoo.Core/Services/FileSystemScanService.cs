@@ -1,8 +1,8 @@
-﻿using SyncRoo.Core.Interfaces;
-using SyncRoo.Core.Models.Dtos;
+﻿using Microsoft.Extensions.Logging;
+using SyncRoo.Core.Interfaces;
 using SyncRoo.Core.Models;
+using SyncRoo.Core.Models.Dtos;
 using SyncRoo.Core.Utils;
-using Microsoft.Extensions.Logging;
 
 namespace SyncRoo.Core.Services
 {
