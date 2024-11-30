@@ -79,9 +79,9 @@ namespace SyncRoo.Core.FileStorageProviders
             using var connection = new SqliteConnection(connectionString);
             var sqlText = FileSystemStorage.GetProviderContent($"{nameof(SqliteFileStorageProvider)}.sql");
 
-            var result = await connection.ExecuteAsync(sqlText);
+            await connection.ExecuteAsync(sqlText);
 
-            logger.LogInformation("Initialized for provider {FileStorageProvider}: {Rows} via {ConnectionString}.", nameof(SqliteFileStorageProvider), result, connectionString);
+            logger.LogInformation("Initialized for provider {FileStorageProvider}.", nameof(SqliteFileStorageProvider));
         }
 
         public async Task PrepareFileStorage(string connectionString, SyncFileMode fileMode, ILogger logger)

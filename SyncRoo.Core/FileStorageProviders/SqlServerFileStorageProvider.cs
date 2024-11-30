@@ -66,7 +66,7 @@ OUTPUT DELETED.FileName, DELETED.Size, DELETED.ModifiedTime",
                 await connection.ExecuteAsync(sqlStatement);
             }
 
-            logger.LogInformation("Initialized for provider {FileStorageProvider}...", nameof(SqlServerFileStorageProvider));
+            logger.LogInformation("Initialized for provider {FileStorageProvider}.", nameof(SqlServerFileStorageProvider));
         }
 
         public async Task PrepareFileStorage(string connectionString, SyncFileMode fileMode, ILogger logger)

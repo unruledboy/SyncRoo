@@ -387,8 +387,17 @@ namespace SyncRoo.Core
                 batchContent.AppendLine("chcp 65001");
                 batchContent.AppendLine(string.Join("\r\n", result.Select(x =>
                 {
-                    var sourceFile = Path.Combine(task.SourceFolder, x.FileName);
-                    var targetFile = Path.Combine(task.TargetFolder, x.FileName);
+                    if (!task.SourceFolder.ValidateNetworkFolder(out _, out var sourceFolder))
+                    {
+                        sourceFolder = task.SourceFolder;
+                    }
+                    var sourceFile = Path.Combine(sourceFolder, x.FileName);
+
+                    if (!task.TargetFolder.ValidateNetworkFolder(out _, out var targetFolder))
+                    {
+                        targetFolder = task.TargetFolder;
+                    }
+                    var targetFile = Path.Combine(targetFolder, x.FileName);
 
                     var command = $"COPY \"{sourceFile}\" \"{targetFile}\" /y";
 
