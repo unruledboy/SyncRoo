@@ -87,11 +87,13 @@ namespace SyncRoo.Core
                 return false;
             }
 
-            profile = JsonSerializer.Deserialize<ProfileDto>(File.ReadAllText(commandOptions.Profile), jsonOptions);
-
-            if (profile == null)
+            try
             {
-                logger.LogError("Invalid profile file.");
+                profile = JsonSerializer.Deserialize<ProfileDto>(File.ReadAllText(commandOptions.Profile), jsonOptions);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Invalid profile file: {ErrorMessage}", ex.Message);
 
                 return false;
             }
@@ -103,7 +105,10 @@ namespace SyncRoo.Core
                 return false;
             }
 
-            var tasksWithSourceFoldersDoesNotExist = profile.Tasks.Where(x => x.IsEnabled && string.IsNullOrWhiteSpace(x.SourceFolder) || !Directory.Exists(x.SourceFolder)).ToList();
+            var tasksWithSourceFoldersDoesNotExist = profile.Tasks.Where(x => x.IsEnabled
+                    && (string.IsNullOrWhiteSpace(x.SourceFolder)
+                        || (!x.SourceFolder.ValidateNetworkFolder(out _, out _) && !Directory.Exists(x.SourceFolder))))
+                .ToList();
             if (tasksWithSourceFoldersDoesNotExist.Count > 0)
             {
                 foreach (var task in tasksWithSourceFoldersDoesNotExist)

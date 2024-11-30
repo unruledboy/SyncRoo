@@ -47,7 +47,9 @@ namespace SyncRoo
                 {
                     services.AddSingleton<IConfiguration>(configuration);
                     services.AddSingleton<IScanService, FileSystemScanService>();
+                    services.AddHttpClient();
 
+                    services.AddSingleton<IFileSourceProvider, RemoteFileSourceProvider>();
                     services.AddSingleton<IFileSourceProvider, NativeFileSourceProvider>();
                     services.AddSingleton<IFileSourceProvider, NtfsUsnJournalFileSourceProvider>();
 

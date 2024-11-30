@@ -21,8 +21,8 @@ namespace SyncRoo.Core.Interfaces
 
         Task<List<PendingFileDto>> GetPendingFiles(string connectionString, long lastId, int batchSize);
 
-        Task<List<FileDto>> GetSourceFiles(string connectionString, long lastId, int batchSize);
+        Task<List<FileDto>> GetSourceFiles(string connectionString, long lastId, int batchSize, ILogger logger);
 
-        Task<List<FileDto>> GetTargetFiles(string connectionString, long lastId, int batchSize);
+        Task<List<FileDto>> GetTargetFiles(string connectionString, long lastId, int batchSize, ILogger logger);
     }
 }

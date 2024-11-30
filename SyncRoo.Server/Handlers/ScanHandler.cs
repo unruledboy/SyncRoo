@@ -15,12 +15,15 @@ namespace SyncRoo.Server.Handlers
         {
             var commandOptions = new CommandOptions
             {
-                AutoTeardown = true
+                AutoTeardown = true,
+                DatabaseConnectionString = databaseConnectionString
             };
             var syncReport = new SyncReport
             {
                 StartedTime = DateTime.Now
             };
+
+            await fileStorageProvider.Initialize(commandOptions.DatabaseConnectionString, logger);
 
             var result = await scanService.Scan(scanTask, syncReport, fileStorageProvider, syncSettings.Value, fileSourceProviders, commandOptions, logger);
 
@@ -28,7 +31,14 @@ namespace SyncRoo.Server.Handlers
         }
 
         public async Task<List<FileDto>> GetFiles(GetFileRequestDto request)
-            => await fileStorageProvider.GetTargetFiles(databaseConnectionString, request.Page * request.Size, request.Size);
+        {
+            return request.FileMode switch
+            {
+                SyncFileMode.Source => await fileStorageProvider.GetSourceFiles(databaseConnectionString, request.Page * request.Size, request.Size, logger),
+                SyncFileMode.Target => await fileStorageProvider.GetTargetFiles(databaseConnectionString, request.Page * request.Size, request.Size, logger),
+                _ => [],
+            };
+        }
 
         public async Task Teardown(TeardownRequestDto teardownRequest)
         {

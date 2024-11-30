@@ -16,18 +16,6 @@ namespace SyncRoo.Core.Services
 
             logger.LogInformation("Scanning {FileMode} files in {RootFolder}...", scanTask.FileMode, scanTask.RootFolder);
 
-            if (!Directory.Exists(scanTask.RootFolder))
-            {
-                Directory.CreateDirectory(scanTask.RootFolder);
-
-                logger.LogInformation("{RootFolder} does not exist. Created automatically.", scanTask.RootFolder);
-
-                return new ScanResultDto
-                {
-                    FileCount = 0
-                };
-            }
-
             await fileStorageProvider.PrepareFileStorage(commandOptions.DatabaseConnectionString, scanTask.FileMode, logger);
 
             var fileSource = GetFileSource(scanTask, fileSourceProviders, commandOptions, syncSettings, logger);

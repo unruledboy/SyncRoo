@@ -7,6 +7,11 @@ namespace SyncRoo.Core.ReportProducers
     {
         public async Task Write(DateTime startedTime, string reportType, string batchFolder, List<string> items)
         {
+            if (string.IsNullOrWhiteSpace(batchFolder))
+            {
+                return;
+            }
+
             var output = new StringBuilder();
 
             output.AppendLine();

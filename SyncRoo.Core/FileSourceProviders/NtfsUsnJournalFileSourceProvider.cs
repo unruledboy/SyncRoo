@@ -1,4 +1,5 @@
 ﻿using EverythingSZ.QueryEngine;
+using Microsoft.Extensions.Logging;
 using SyncRoo.Core.Interfaces;
 using SyncRoo.Core.Models;
 using SyncRoo.Core.Models.Dtos;
@@ -6,7 +7,7 @@ using SyncRoo.Core.Utils;
 
 namespace SyncRoo.Core.FileSourceProviders
 {
-    public class NtfsUsnJournalFileSourceProvider : IFileSourceProvider
+    public class NtfsUsnJournalFileSourceProvider(ILogger<IReportProducer> logger) : IFileSourceProvider
     {
         private readonly List<string> cachedFiles = [];
         private bool isInitialized = false;
@@ -15,6 +16,15 @@ namespace SyncRoo.Core.FileSourceProviders
 
         public async IAsyncEnumerable<FileDto> Find(ScanTaskDto scanTask, AppSyncSettings syncSettings)
         {
+            if (!Directory.Exists(scanTask.RootFolder))
+            {
+                Directory.CreateDirectory(scanTask.RootFolder);
+
+                logger.LogInformation("{RootFolder} does not exist. Created automatically.", scanTask.RootFolder);
+
+                yield break;
+            }
+
             foreach (var file in cachedFiles.Where(x => x.StartsWith(scanTask.RootFolder, StringComparison.OrdinalIgnoreCase) && x.IsFilePatternMatched(scanTask.FilePatterns)))
             {
                 var fileInfo = new FileInfo(file);

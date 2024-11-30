@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
+using Serilog.Core;
 using SyncRoo.Core.Interfaces;
 using SyncRoo.Core.Models;
 using SyncRoo.Core.Models.Dtos;
@@ -35,12 +36,16 @@ namespace SyncRoo.Core.FileStorageProviders
             }).ToList();
         }
 
-        public async Task<List<FileDto>> GetSourceFiles(string connectionString, long lastId, int batchSize)
+        public async Task<List<FileDto>> GetSourceFiles(string connectionString, long lastId, int batchSize, ILogger logger)
         {
+            logger.LogInformation("Getting files in source...");
+
             using var connection = new SqliteConnection(connectionString);
 
-            var result = (await connection.QueryAsync<SqliteFileDto>("DELETE SourceFile WHERE FileName IN (SELECT FileName FROM SourceFile ORDER BY FileName LIMIT @Next OFFSET 0) RETURNING *",
+            var result = (await connection.QueryAsync<SqliteFileDto>("DELETE FROM SourceFile WHERE FileName IN (SELECT FileName FROM SourceFile ORDER BY FileName LIMIT @Next OFFSET 0) RETURNING *",
                 new { Next = batchSize })).ToList();
+
+            logger.LogInformation("Found {FileCount} in source", result.Count);
 
             return result.Select(x => new FileDto
             {
@@ -50,12 +55,14 @@ namespace SyncRoo.Core.FileStorageProviders
             }).ToList();
         }
 
-        public async Task<List<FileDto>> GetTargetFiles(string connectionString, long lastId, int batchSize)
+        public async Task<List<FileDto>> GetTargetFiles(string connectionString, long lastId, int batchSize, ILogger logger)
         {
             using var connection = new SqliteConnection(connectionString);
 
-            var result = (await connection.QueryAsync<SqliteFileDto>("DELETE TargetFile WHERE FileName IN (SELECT FileName FROM TargetFile ORDER BY FileName LIMIT @Next OFFSET 0) RETURNING *",
+            var result = (await connection.QueryAsync<SqliteFileDto>("DELETE FROM TargetFile WHERE FileName IN (SELECT FileName FROM TargetFile ORDER BY FileName LIMIT @Next OFFSET 0) RETURNING *",
                 new { Next = batchSize })).ToList();
+
+            logger.LogInformation("Found {FileCount} in target", result.Count);
 
             return result.Select(x => new FileDto
             {
@@ -72,9 +79,9 @@ namespace SyncRoo.Core.FileStorageProviders
             using var connection = new SqliteConnection(connectionString);
             var sqlText = FileSystemStorage.GetProviderContent($"{nameof(SqliteFileStorageProvider)}.sql");
 
-            await connection.ExecuteAsync(sqlText);
+            var result = await connection.ExecuteAsync(sqlText);
 
-            logger.LogInformation("Initialized for provider {FileStorageProvider}.", nameof(SqliteFileStorageProvider));
+            logger.LogInformation("Initialized for provider {FileStorageProvider}: {Rows} via {ConnectionString}.", nameof(SqliteFileStorageProvider), result, connectionString);
         }
 
         public async Task PrepareFileStorage(string connectionString, SyncFileMode fileMode, ILogger logger)

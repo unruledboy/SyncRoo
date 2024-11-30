@@ -31,7 +31,7 @@ namespace SyncRoo.Core.FileStorageProviders
             return await Task.FromResult(result);
         }
 
-        public async Task<List<FileDto>> GetSourceFiles(string connectionString, long lastId, int batchSize)
+        public async Task<List<FileDto>> GetSourceFiles(string connectionString, long lastId, int batchSize, ILogger logger)
         {
             var result = sourceFiles.Take(batchSize);
 
@@ -43,7 +43,7 @@ namespace SyncRoo.Core.FileStorageProviders
             return await Task.FromResult(result.Select(x => x.Value).ToList());
         }
 
-        public async Task<List<FileDto>> GetTargetFiles(string connectionString, long lastId, int batchSize)
+        public async Task<List<FileDto>> GetTargetFiles(string connectionString, long lastId, int batchSize, ILogger logger)
         {
             var result = targetFiles.Take(batchSize);
 

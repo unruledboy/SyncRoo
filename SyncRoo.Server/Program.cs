@@ -31,9 +31,11 @@ namespace SyncRoo.Server
                 .Build();
 
             var builder = WebApplication.CreateBuilder(args);
+            builder.Services.AddHttpClient();
             builder.Services.AddSingleton<IConfiguration>(configuration);
             builder.Services.AddSingleton<IScanService, FileSystemScanService>();
 
+            builder.Services.AddSingleton<IFileSourceProvider, RemoteFileSourceProvider>();
             builder.Services.AddSingleton<IFileSourceProvider, NativeFileSourceProvider>();
             builder.Services.AddSingleton<IFileSourceProvider, NtfsUsnJournalFileSourceProvider>();
 

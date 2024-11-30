@@ -31,7 +31,7 @@ namespace SyncRoo.Core.FileStorageProviders
             return result;
         }
 
-        public async Task<List<FileDto>> GetSourceFiles(string connectionString, long lastId, int batchSize)
+        public async Task<List<FileDto>> GetSourceFiles(string connectionString, long lastId, int batchSize, ILogger logger)
         {
             using var connection = new SqlConnection(connectionString);
 
@@ -42,7 +42,7 @@ OUTPUT DELETED.FileName, DELETED.Size, DELETED.ModifiedTime",
             return result;
         }
 
-        public async Task<List<FileDto>> GetTargetFiles(string connectionString, long lastId, int batchSize)
+        public async Task<List<FileDto>> GetTargetFiles(string connectionString, long lastId, int batchSize, ILogger logger)
         {
             using var connection = new SqlConnection(connectionString);
 
