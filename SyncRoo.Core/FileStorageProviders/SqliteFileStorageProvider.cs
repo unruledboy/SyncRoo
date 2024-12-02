@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
-using Serilog.Core;
 using SyncRoo.Core.Interfaces;
 using SyncRoo.Core.Models;
 using SyncRoo.Core.Models.Dtos;

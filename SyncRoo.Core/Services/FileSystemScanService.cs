@@ -20,11 +20,16 @@ namespace SyncRoo.Core.Services
 
             var fileSource = GetFileSource(scanTask, fileSourceProviders, commandOptions, syncSettings, logger);
 
+            if (!scanTask.RootFolder.ValidateNetworkFolder(out _, out var rootFolder))
+            {
+                rootFolder = scanTask.RootFolder;
+            }
+
             await foreach (var fileInfo in fileSource)
             {
                 pendingFiles.Add(new FileDto
                 {
-                    FileName = fileInfo.FileName[(scanTask.RootFolder.Length + 1)..],
+                    FileName = fileInfo.FileName[(rootFolder.Length + 1)..],
                     Size = fileInfo.Size,
                     ModifiedTime = fileInfo.ModifiedTime
                 });
