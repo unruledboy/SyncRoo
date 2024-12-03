@@ -29,7 +29,7 @@ namespace SyncRoo.Core.Services
             {
                 pendingFiles.Add(new FileDto
                 {
-                    FileName = fileInfo.FileName[(rootFolder.Length + 1)..],
+                    FileName = fileInfo.FileName.StartsWith(rootFolder, StringComparison.OrdinalIgnoreCase) ? fileInfo.FileName[(rootFolder.Length + 1)..] : fileInfo.FileName,
                     Size = fileInfo.Size,
                     ModifiedTime = fileInfo.ModifiedTime
                 });
