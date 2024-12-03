@@ -21,7 +21,8 @@ namespace SyncRoo.Core.FileSourceProviders
                 yield break;
             }
 
-            foreach (var file in Directory.EnumerateFiles(scanTask.RootFolder).Where(x => x.IsFilePatternMatched(scanTask.FilePatterns)))
+            foreach (var file in Directory.EnumerateFiles(scanTask.RootFolder, FilePatterns.All, SearchOption.AllDirectories)
+                .Where(x => x.IsFilePatternMatched(scanTask.FilePatterns)))
             {
                 var fileInfo = new FileInfo(file);
 
