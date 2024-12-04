@@ -59,11 +59,16 @@ namespace SyncRoo.Server
             builder.Services.AddSingleton<ScanHandler>();
 
             builder.Services.Configure<AppSyncSettings>(configuration.GetSection("Sync"));
+            builder.Services.AddRequestDecompression();
+            builder.Services.AddResponseCompression();
             builder.Host.UseSerilog((context, configuration) =>
                 configuration.ReadFrom.Configuration(context.Configuration));
             builder.Logging.AddSerilog(Log.Logger);
 
             var app = builder.Build();
+
+            app.UseRequestDecompression();
+            app.UseResponseCompression();
 
             app.MapGet("/", () => "Hello SyncRoo!");
 

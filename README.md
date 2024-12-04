@@ -3,6 +3,17 @@ SyncRoo can quickly synchronize files between devices. It's a lot quicker than R
 
 Currently it only supports Windows devices.
 
+## Features
+SyncRoo is created for my personal usage as I was not happy with the formance and functionalities of other solutions.
+
+In one of my other project, I have over 30 million files that need to be synchornized between devices regularly. And I need that to run fast and effectively, only synchornize the new / changed files.
+
+And whatever I am after, have been implemented in SyncRoo:
+- Fast and with low memory consumption: SyncRoo is really fast, by leveraging the power of built-in Sqlite / external database systems, which can efficiently manage and compare the files that need to be synchornized.
+- Cross machine sync: traditionally we may use UNC path, or mapped network drive, they are all transferred over SMB protocol, and the performance is not good. SyncRoo comes with dedicated server instance in each machine, and leverage the native API to gain maximum performance, then send the result over network. The performance is a lot better.
+- Custom profiles: rather than typing the same command parameters every time you need to sychronize files between folders / machines, you can create a JSON-based profile file and reuse it in the automation tools like Windows Task Scheduler.
+- Native Windows NTFS Journal support: NTFS tracks changes to the file system and store the info on the MFT. We can quickly search matching files on an NTFS USN Journal enabled drive.
+
 ## Rationale
 It will first get the full list of file names, alongside with the file size and last modified time of the source folder, and save it to a database table.
 
@@ -194,4 +205,3 @@ To isntall, follow the steps of the installation wizard.
 ## ToDos
 - Support NTFS USN Journal. Currently the logic is implemented, but the build/architecture of the project must be Windows x86, otherwise the relevant Win32 API will fail.
 - Support multithreads for processing different folders parallelly. Currently it only support running multiple batch files concurrently.
-- Cross machine sync using network protocols. Currently if we search files for UNC path or mapped network drive, they are all over SMB protocol, and the performance is not good. We can run dedicated instance in each machine, and leverage the native API to gain maximum performance, then send the result over network. Then the performance should be a lot better.
