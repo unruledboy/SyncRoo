@@ -36,7 +36,7 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
 
 ## Usage
 
-## Command Options
+### Command Options
 
 ```text
   -s, --Source          Required. The source folder where the files to be copied from.
@@ -68,7 +68,7 @@ SyncRoo took 30 minutes to find the delta file list, which is over 200 times fas
   --version             Display version information.
 ```
 
-### Basic Commands
+#### Basic Commands
 
 If it's for occasional file sync, you may choose to specify the source folder with `-s` parameter and the target folder with `-t` parameter, like below:
 ```bat
@@ -85,7 +85,7 @@ You can specify the file patterns if it's not for all the files (by default it's
 SyncRoo -s "D:\MyPictures\Favorites" -t "Z:\Backup\Pictures\Favorites" -b "C:\Temp\SyncRooBatch", -f "*.jpg" "*.png" "XYZ*.tiff"
 ```
 
-### Profile Command
+#### Profile Command
 If you need to regularly synchronize files between folders, you may create a profile file with multiple sync tasks, which is a simple json file, like below:
 ```json
 {
@@ -119,7 +119,7 @@ SyncRoo -p "D:\MySyncRooTasks\DailySync.json"
 
 If you would like to temporarily disable certain task in the profile, you could set `isEnabled` to be `false` for the task, as shown in the second task in above sample.
 
-### NTFS USN Journal Command
+#### NTFS USN Journal Command
 NTFS tracks changes to the file system and store the info on the MFT. We can quickly search matching files on an NTFS USN Journal enabled drive.
 
 > [!NOTE]
