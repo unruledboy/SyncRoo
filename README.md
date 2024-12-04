@@ -136,6 +136,22 @@ To enable the support for USN Journal, specify the `-n` parameter, like below:
 SyncRoo -s "D:\MyPictures\Favorites" -t "Z:\Backup\Pictures\Favorites" -n
 ```
 
+### Remote Sync
+SyncRoo supports synchornizing files between devices.
+
+> [!NOTE]
+> You will need to run the `SyncRoo.Server.exe` and with the firewall allowing it to pass through. By default it uses port number `5211`.
+
+Once you have the server running on the other device (either as source or target), you will just need to prefix the folder with the following format:
+> SyncRoo:[ServerName]:5211/
+
+For example, if the machine (let's say `DavidServer`) that runs the `SyncRoo.Server.exe` server application is the source of the files that need to be synchronized to another device, then:
+```bat
+SyncRoo -s "SyncRoo:DavidServer:5211/D:\MyPictures\Favorites" -t "Z:\Backup\Pictures\Favorites"
+```
+
+That's it.
+
 ### Rules
 There are 3 types of rules:
 - Standard: this is the default rule, where a new file or a file is different in size or last modified time.
@@ -194,7 +210,7 @@ For example, to use Sqlite, you can set like below:
 ```json
 {
   "ConnectionStrings": {
-    "Database": "Data Source=D:\SyncRoo-Data\\SyncRoo-Sqlite.db"
+    "Database": "Data Source=D:\\SyncRoo-Data\\SyncRoo-Sqlite.db"
   },
   "Sync": {
     "FilStorageProvider": "Sqlite"
