@@ -174,13 +174,33 @@ It's primary .NET stack:
 
 ## Storage Providers
 SyncRoo supports multiple storage to persist the file name, size and modified time of the files in the source folder, target folder and the delta, including:
-- Sqlite
-- In-Memory
-- SQL Server
-- SQL Server Express LocalDB
+| Provide Name  | Provider Code |
+| ------------- | ------------- |
+| Sqlite  | Sqlite  |
+| In-Memory  | InMemory  |
+| SQL Server  | SQLServer  |
+| SQL Server Express LocalDB | SQLServer  |
+
+To use them, please set the following two values based on the supported provider in the `appsettings.json` or `appsettings.release.json` file which sits at the root folder of SyncRoo:
+- ConnectionStrings > Database
+- Sync -> FilStorageProvider
+
+The value of FilStorageProvider is the `Provider Code` in the aforementioned table.
 
 ### Sqlite
 Sqlite is shipped with SyncRoo, and it's the default storage provider.
+
+For example, to use Sqlite, you can set like below:
+```json
+{
+  "ConnectionStrings": {
+    "Database": "Data Source=D:\SyncRoo-Data\\SyncRoo-Sqlite.db"
+  },
+  "Sync": {
+    "FilStorageProvider": "Sqlite"
+  }
+}
+```
 
 ### In-Memory
 The in-memory provider is the fastest, but it may consume large amount of the memory depending on the number of the files being processed.
@@ -188,10 +208,47 @@ The in-memory provider is the fastest, but it may consume large amount of the me
 > [!WARNING]
 > SyncRoo will need to hold the meta data of the files (file name, size and last modified time), and that could be a lot of memory usage.
 
+For example, to use in-memory, you can set like below:
+
+```json
+{
+  "ConnectionStrings": {
+    "Database": ""
+  },
+  "Sync": {
+    "FilStorageProvider": "InMemory"
+  }
+}
+```
+
 ### SQL Server
 If you have an existing SQL Server, you can use that and specify the connection string in the appsettings.json file.
 
 If you would like to use a free version, you could download the latest version [SQL Server Express here](https://www.microsoft.com/en-au/sql-server/sql-server-downloads)
+
+To use SQL Server with credentials, you can set like below:
+```json
+{
+  "ConnectionStrings": {
+    "Database": "Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;"
+  },
+  "Sync": {
+    "FilStorageProvider": "SQLServer"
+  }
+}
+```
+
+To use SQL Server with integrated security (your current Windows identity), you can set like below:
+```json
+{
+  "ConnectionStrings": {
+    "Database": "Server=myServerAddress;Database=myDataBase;Integrated Security=SSPI;"
+  },
+  "Sync": {
+    "FilStorageProvider": "SQLServer"
+  }
+}
+```
 
 ### SQL Server Express LocalDB
 If you want to use SQL Server Express LocalDB, which is free to use, you will need to bear in mind the database size limit is 10GB.
@@ -201,6 +258,18 @@ If the total number of files including the source, the target and the delta are 
 To download the latest version (currently 2022), please click [SQL Server 2022 Express LocalDB](https://download.microsoft.com/download/3/8/d/38de7036-2433-4207-8eae-06e247e17b25/SqlLocalDB.msi).
 
 To isntall, follow the steps of the installation wizard.
+
+To use SQL Server Express LocalDB, you can set like below:
+```json
+{
+  "ConnectionStrings": {
+    "Database": "Server=(localdb)\v16.0;Integrated Security=true;"
+  },
+  "Sync": {
+    "FilStorageProvider": "SQLServer"
+  }
+}
+```
 
 ## ToDos
 - Support NTFS USN Journal. Currently the logic is implemented, but the build/architecture of the project must be Windows x86, otherwise the relevant Win32 API will fail.
