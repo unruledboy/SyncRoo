@@ -5,14 +5,14 @@ namespace SyncRoo.Core.Utils
 {
     public static class FileCopyDecisioner
     {
-        public static bool ValidateNetworkFolder(this string folder, out string server, out string path)
+        public static bool ValidateSyncProtocol(this string folder, out string server, out string path)
         {
             const char ProtocolSeparator = ':';
             const char PathSeparator = '/';
-            var prefix = $"{SyncProtocols.Network}{ProtocolSeparator}";
-            var isNetworkFolder = folder.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+            var prefix = $"{SyncProtocols.SyncRoo}{ProtocolSeparator}";
+            var isRemoteFolder = folder.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
 
-            if (isNetworkFolder)
+            if (isRemoteFolder)
             {
                 var parts = folder[prefix.Length..].Split(PathSeparator);
 
@@ -25,7 +25,7 @@ namespace SyncRoo.Core.Utils
                 path = default;
             }
 
-            return isNetworkFolder;
+            return isRemoteFolder;
         }
 
         public static bool IsFilePatternMatched(this string file, List<string> filePatterns)

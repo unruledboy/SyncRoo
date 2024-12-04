@@ -107,7 +107,7 @@ namespace SyncRoo.Core
 
             var tasksWithSourceFoldersDoesNotExist = profile.Tasks.Where(x => x.IsEnabled
                     && (string.IsNullOrWhiteSpace(x.SourceFolder)
-                        || (!x.SourceFolder.ValidateNetworkFolder(out _, out _) && !Directory.Exists(x.SourceFolder))))
+                        || (!x.SourceFolder.ValidateSyncProtocol(out _, out _) && !Directory.Exists(x.SourceFolder))))
                 .ToList();
             if (tasksWithSourceFoldersDoesNotExist.Count > 0)
             {
@@ -383,12 +383,12 @@ namespace SyncRoo.Core
 
                 lastId = result[^1].Id;
 
-                if (!task.SourceFolder.ValidateNetworkFolder(out _, out var sourceFolder))
+                if (!task.SourceFolder.ValidateSyncProtocol(out _, out var sourceFolder))
                 {
                     sourceFolder = task.SourceFolder;
                 }
 
-                if (!task.TargetFolder.ValidateNetworkFolder(out _, out var targetFolder))
+                if (!task.TargetFolder.ValidateSyncProtocol(out _, out var targetFolder))
                 {
                     targetFolder = task.TargetFolder;
                 }

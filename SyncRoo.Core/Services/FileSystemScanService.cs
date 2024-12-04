@@ -20,7 +20,7 @@ namespace SyncRoo.Core.Services
 
             var fileSource = GetFileSource(scanTask, fileSourceProviders, commandOptions, syncSettings, logger);
 
-            if (!scanTask.RootFolder.ValidateNetworkFolder(out _, out var rootFolder))
+            if (!scanTask.RootFolder.ValidateSyncProtocol(out _, out var rootFolder))
             {
                 rootFolder = scanTask.RootFolder;
             }

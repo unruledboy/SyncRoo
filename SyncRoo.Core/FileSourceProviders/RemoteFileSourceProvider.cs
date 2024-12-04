@@ -16,7 +16,7 @@ namespace SyncRoo.Core.FileSourceProviders
 
         public async IAsyncEnumerable<FileDto> Find(ScanTaskDto scanTask, AppSyncSettings syncSettings)
         {
-            if (!scanTask.RootFolder.ValidateNetworkFolder(out var server, out var path))
+            if (!scanTask.RootFolder.ValidateSyncProtocol(out var server, out var path))
             {
                 yield break;
             }
@@ -137,6 +137,6 @@ namespace SyncRoo.Core.FileSourceProviders
         }
 
         public bool IsSupported(string folder, bool usnJournal)
-            => folder.ValidateNetworkFolder(out _, out _);
+            => folder.ValidateSyncProtocol(out _, out _);
     }
 }

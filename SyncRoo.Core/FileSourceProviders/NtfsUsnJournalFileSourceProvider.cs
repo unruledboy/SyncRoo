@@ -62,7 +62,7 @@ namespace SyncRoo.Core.FileSourceProviders
 
         public bool IsSupported(string folder, bool usnJournal)
         {
-            if (folder.ValidateNetworkFolder(out _, out _))
+            if (folder.ValidateSyncProtocol(out _, out _))
             {
                 return false;
             }

@@ -2,7 +2,7 @@
 {
     public static class SyncProtocols
     {
-        public const string Network = "Network";
+        public const string SyncRoo = "syncroo";
     }
 
     public static class ConnectionStrings
