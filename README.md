@@ -128,6 +128,8 @@ NTFS tracks changes to the file system and store the info on the MFT. We can qui
 
 > [!IMPORTANT]
 > You will need to run SyncRoo with elevated access (aka. run as administrator), otherwise it will not work.
+> Please only consider enabling this feature when the number of files that need to be synchronized is relatively large enough comparing to the total number of the files in the disk drive.
+> For example, if you only need to synchroize 100K files in a drive that contains millions of files or more, then it is not recommended. But if you want to synchronize most of the files of the drive, then it's ok to do so.
 
 > [!WARNING]
 > SyncRoo will need to preload all the files on the fixed drives so that the result can be shared within all subsequent searches, and that can take some time, and potentially a lot of memory, depending on the number of files on your NTFS drives.
