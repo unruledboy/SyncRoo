@@ -9,5 +9,6 @@ namespace SyncRoo.Core.Models.Dtos
         public string Rule { get; set; }
         public List<string> Limits { get; set; } = [];
         public SyncFileMode FileMode { get; set; }
+        public bool UsnJournal { get; set; }
     }
 }

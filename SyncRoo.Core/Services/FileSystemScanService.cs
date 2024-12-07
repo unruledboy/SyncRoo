@@ -18,7 +18,7 @@ namespace SyncRoo.Core.Services
 
             await fileStorageProvider.PrepareFileStorage(commandOptions.DatabaseConnectionString, scanTask.FileMode, logger);
 
-            var fileSource = GetFileSource(scanTask, fileSourceProviders, commandOptions, syncSettings, logger);
+            var fileSource = GetFileSource(scanTask, fileSourceProviders, syncSettings, logger);
 
             if (!scanTask.RootFolder.ValidateSyncProtocol(out _, out var rootFolder))
             {
@@ -67,11 +67,11 @@ namespace SyncRoo.Core.Services
             };
         }
 
-        private static IAsyncEnumerable<FileDto> GetFileSource(ScanTaskDto scanTask, IEnumerable<IFileSourceProvider> fileSourceProviders, CommandOptions commandOptions, AppSyncSettings syncSettings, ILogger logger)
+        private static IAsyncEnumerable<FileDto> GetFileSource(ScanTaskDto scanTask, IEnumerable<IFileSourceProvider> fileSourceProviders, AppSyncSettings syncSettings, ILogger logger)
         {
             logger.LogInformation("Initializing file source provider...");
 
-            var fileSourceProvider = fileSourceProviders.FirstOrDefault(x => x.IsSupported(scanTask.RootFolder, commandOptions.UsnJournal));
+            var fileSourceProvider = fileSourceProviders.FirstOrDefault(x => x.IsSupported(scanTask.RootFolder, scanTask.UsnJournal));
 
             fileSourceProvider ??= fileSourceProviders.First(x => x.Name == SourceProviders.Native);
             fileSourceProvider.Init();

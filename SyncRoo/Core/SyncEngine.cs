@@ -157,6 +157,8 @@ namespace SyncRoo.Core
 
         private async Task<BatchResultDto> ProcessTask(SyncTaskDto task, bool autoTeardown)
         {
+
+
             var syncReport = new SyncReport
             {
                 StartedTime = DateTime.Now,
@@ -179,7 +181,8 @@ namespace SyncRoo.Core
                             FileMode = SyncFileMode.Source,
                             FilePatterns = task.FilePatterns,
                             Rule = task.Rule,
-                            Limits = task.Limits
+                            Limits = task.Limits,
+                            UsnJournal = commandOptions.UsnJournal
                         }, syncReport);
 
                         await ScanFiles(new ScanTaskDto
@@ -188,7 +191,8 @@ namespace SyncRoo.Core
                             FileMode = SyncFileMode.Target,
                             FilePatterns = task.FilePatterns,
                             Rule = task.Rule,
-                            Limits = task.Limits
+                            Limits = task.Limits,
+                            UsnJournal = commandOptions.UsnJournal
                         }, syncReport);
                         break;
                     case Operations.Process:
@@ -207,7 +211,8 @@ namespace SyncRoo.Core
                     FileMode = SyncFileMode.Source,
                     FilePatterns = task.FilePatterns,
                     Rule = task.Rule,
-                    Limits = task.Limits
+                    Limits = task.Limits,
+                    UsnJournal = commandOptions.UsnJournal
                 }, syncReport);
 
                 await ScanFiles(new ScanTaskDto
@@ -216,7 +221,8 @@ namespace SyncRoo.Core
                     FileMode = SyncFileMode.Target,
                     FilePatterns = task.FilePatterns,
                     Rule = task.Rule,
-                    Limits = task.Limits
+                    Limits = task.Limits,
+                    UsnJournal = commandOptions.UsnJournal
                 }, syncReport);
 
                 await ProcessPendingFiles(task);
