@@ -127,6 +127,7 @@ namespace SyncRoo.Core
             foreach (var task in profile.Tasks.Where(x => string.IsNullOrWhiteSpace(x.Rule)))
             {
                 task.Rule ??= Rules.Standard;
+                task.Rule = task.Rule.ToLowerInvariant();
             }
 
             var tasksWithInvalidRule = profile.Tasks.Where(x => x.IsEnabled && x.Rule != Rules.Standard && x.Rule != Rules.Newer && x.Rule != Rules.Larger).ToList();
@@ -140,7 +141,6 @@ namespace SyncRoo.Core
                 return false;
             }
 
-
             var tasksWithInvalidLimit = profile.Tasks.Where(x => x.IsEnabled && x.Limits != null && x.Limits.Exists(l => !l.IsValidFileLimit(out _, out _))).ToList();
             if (tasksWithInvalidLimit.Count > 0)
             {
@@ -148,6 +148,7 @@ namespace SyncRoo.Core
                 {
                     logger.LogError("Task with invalid limit: {Limit}, source folder: {RootFolder}", string.Join(',', task.Limits), task.SourceFolder);
                 }
+
                 return false;
             }
 
@@ -321,7 +322,7 @@ namespace SyncRoo.Core
 
             batchResult.RunFolder.SafeDeleteDirectory();
 
-            logger.LogInformation("Cleaned up batch folder {BatchFolder}.", batchResult.RunFolder);
+            logger.LogInformation("Cleaned up batch folder {RunFolder}.", batchResult.RunFolder);
 
             return batchResult;
         }
@@ -356,7 +357,7 @@ namespace SyncRoo.Core
             batchResult.BatchFolder = batchFolder;
             batchResult.RunFolder = batchRunFolder;
 
-            logger.LogInformation("Batch files will be generated in {BatchFolder} for this run...", batchRunFolder);
+            logger.LogInformation("Batch files will be generated in {RunFolder} for this run...", batchRunFolder);
 
             var lastId = 0L;
             var pendingFileCount = await fileStorageProvider.GetPendingFileCount(commandOptions.DatabaseConnectionString);
