@@ -12,7 +12,7 @@ namespace SyncRoo.Core.FileSourceProviders
 {
     public class RemoteFileSourceProvider(IHttpClientFactory httpClientFactory, ILogger<IReportProducer> logger) : IFileSourceProvider
     {
-        public string Name => SourceProviders.Native;
+        public string Name => SourceProviders.Remote;
 
         public async IAsyncEnumerable<FileDto> Find(ScanTaskDto scanTask, AppSyncSettings syncSettings)
         {

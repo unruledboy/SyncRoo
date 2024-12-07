@@ -29,6 +29,11 @@ namespace SyncRoo.Core.FileSourceProviders
             {
                 var fileInfo = new FileInfo(file);
 
+                if (!fileInfo.Exists)
+                {
+                    continue;
+                }
+
                 var fileDto = new FileDto
                 {
                     FileName = fileInfo.FullName,

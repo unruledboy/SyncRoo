@@ -74,9 +74,12 @@ namespace SyncRoo.Core.Services
             var fileSourceProvider = fileSourceProviders.FirstOrDefault(x => x.IsSupported(scanTask.RootFolder, scanTask.UsnJournal));
 
             fileSourceProvider ??= fileSourceProviders.First(x => x.Name == SourceProviders.Native);
+
+            logger.LogInformation("File source provider ({FileSourceProvider}) is chosen, initializing...", fileSourceProvider.Name);
+
             fileSourceProvider.Init();
 
-            logger.LogInformation("Initialized file source provider. Searching for files...");
+            logger.LogInformation("Initialized file source provider ({FileSourceProvider}). Searching for files...", fileSourceProvider.Name);
 
             return fileSourceProvider.Find(scanTask, syncSettings);
         }

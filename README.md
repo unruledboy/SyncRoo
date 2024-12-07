@@ -124,12 +124,13 @@ NTFS tracks changes to the file system and store the info on the MFT. We can qui
 
 > [!NOTE]
 > Only fixed drive with NTFS file system enabled supports this feature. Mapped network drives and UNC paths do not support this.
+> And your SyncRoo application (including the console and the server) needs to run in x86 build due to the underlying Win32 API limitation.
 
 > [!IMPORTANT]
 > You will need to run SyncRoo with elevated access (aka. run as administrator), otherwise it will not work.
 
 > [!WARNING]
-> SyncRoo will need to preload all the files on the fixed drives so that the result can be shared within all subsequent searches, and that can take some time, and potentially a lot of memory.
+> SyncRoo will need to preload all the files on the fixed drives so that the result can be shared within all subsequent searches, and that can take some time, and potentially a lot of memory, depending on the number of files on your NTFS drives.
 
 To enable the support for USN Journal, specify the `-n` parameter, like below:
 ```bat

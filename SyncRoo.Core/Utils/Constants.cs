@@ -51,6 +51,7 @@
 
     public static class SourceProviders
     {
+        public const string Remote = "Remote";
         public const string Native = "Native";
         public const string UsnJournal = "USN";
     }
