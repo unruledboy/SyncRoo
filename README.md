@@ -1,5 +1,5 @@
 ## SyncRoo
-SyncRoo can quickly synchronize files between devices. It's a lot quicker than Robocopy in subsequent delta syncs.
+SyncRoo can quickly synchronize files between devices.
 
 Currently it only supports Windows devices.
 
@@ -28,11 +28,7 @@ When copying large amount of files, it can be both IO bound, and when it comes t
 
 The number of test sample files is 14 million. The source folder have 14 million files, the target folder has about 13 million files.
 
-The hardware is i5-13600K CPU + AData Legend 800 3.5GB/s SSD.
-
-Robocopy took over 4 days to work out the delta and started to copy the first file.
-
-SyncRoo took 30 minutes to find the delta file list, which is over 200 times faster than Robocopy.
+The hardware is i5-13600K CPU + AData Legend 800 3.5GB/s SSD. SyncRoo took 30 minutes to find the delta file list.
 
 ## Usage
 
@@ -291,5 +287,4 @@ To use SQL Server Express LocalDB, you can set like below:
 ```
 
 ## ToDos
-- Support NTFS USN Journal. Currently the logic is implemented, but the build/architecture of the project must be Windows x86, otherwise the relevant Win32 API will fail.
 - Support multithreads for processing different folders parallelly. Currently it only support running multiple batch files concurrently.
