@@ -157,8 +157,6 @@ namespace SyncRoo.Core
 
         private async Task<BatchResultDto> ProcessTask(SyncTaskDto task, bool autoTeardown)
         {
-
-
             var syncReport = new SyncReport
             {
                 StartedTime = DateTime.Now,
@@ -311,7 +309,7 @@ namespace SyncRoo.Core
                     var process = new Process();
                     process.StartInfo.FileName = batchFile;
                     process.StartInfo.ErrorDialog = true;
-                    process.StartInfo.CreateNoWindow = false;
+                    process.StartInfo.CreateNoWindow = true;
                     process.StartInfo.UseShellExecute = false;
                     process.Start();
                     process.WaitForExit(TimeSpan.FromSeconds(syncSettings.ProcessTimeoutInSeconds));
@@ -322,7 +320,7 @@ namespace SyncRoo.Core
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Failed to run batch file {BatchFile}", batchFile);
+                    logger.LogError(ex, "Failed to run batch file {BatchFile}.", batchFile);
                 }
             });
 
