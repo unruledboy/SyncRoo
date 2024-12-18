@@ -296,6 +296,9 @@ namespace SyncRoo.Core
                 logger.LogInformation("No batch files generated.");
             }
 
+            var failedBatchCount = 0;
+            var successfulBatchCount = 0;
+
             Parallel.ForEach(batchResult.Files, new ParallelOptions
             {
                 MaxDegreeOfParallelism = commandOptions.MultiThreads,
@@ -316,16 +319,22 @@ namespace SyncRoo.Core
 
                     batchFile.SafeDeleteFile();
 
+                    Interlocked.Increment(ref successfulBatchCount);
+
                     logger.LogInformation("Ran batch file {BatchFile}.", batchFile);
                 }
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Failed to run batch file {BatchFile}.", batchFile);
+
+                    Interlocked.Increment(ref failedBatchCount);
                 }
             });
 
             batchResult.RunFolder.SafeDeleteDirectory();
 
+            logger.LogInformation("Batch files successfully executed: {SuccessfulBatchCount}.", successfulBatchCount);
+            logger.LogInformation("Batch files failed to execute: {FailedBatchCount}.", failedBatchCount);
             logger.LogInformation("Cleaned up batch folder {RunFolder}.", batchResult.RunFolder);
 
             return batchResult;
