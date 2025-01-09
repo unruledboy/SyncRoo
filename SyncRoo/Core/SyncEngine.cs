@@ -413,7 +413,7 @@ namespace SyncRoo.Core
                 {
                     var sourceFile = Path.Combine(sourceFolder, x.FileName);
                     var targetFile = Path.Combine(targetFolder, x.FileName);
-                    var command = $"COPY \"{sourceFile}\" \"{targetFile}\" /y";
+                    var command = $"XCOPY \"{sourceFile}\" \"{targetFile}\" /y";
 
                     return command;
                 })));
