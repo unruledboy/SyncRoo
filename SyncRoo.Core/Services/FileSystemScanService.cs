@@ -16,50 +16,57 @@ namespace SyncRoo.Core.Services
 
             logger.LogInformation("Scanning {FileMode} files in {RootFolder}...", scanTask.FileMode, scanTask.RootFolder);
 
-            await fileStorageProvider.PrepareFileStorage(commandOptions.DatabaseConnectionString, scanTask.FileMode, logger);
-
-            var fileSource = GetFileSource(scanTask, fileSourceProviders, syncSettings, logger);
-
-            if (!scanTask.RootFolder.ValidateSyncProtocol(out _, out var rootFolder))
+            try
             {
-                rootFolder = scanTask.RootFolder;
-            }
+                await fileStorageProvider.PrepareFileStorage(commandOptions.DatabaseConnectionString, scanTask.FileMode, logger);
 
-            await foreach (var fileInfo in fileSource)
-            {
-                pendingFiles.Add(new FileDto
+                var fileSource = GetFileSource(scanTask, fileSourceProviders, syncSettings, logger);
+
+                if (!scanTask.RootFolder.ValidateSyncProtocol(out _, out var rootFolder))
                 {
-                    FileName = fileInfo.FileName.StartsWith(rootFolder, StringComparison.OrdinalIgnoreCase) ? fileInfo.FileName[(rootFolder.Length + 1)..] : fileInfo.FileName,
-                    Size = fileInfo.Size,
-                    ModifiedTime = fileInfo.ModifiedTime
-                });
+                    rootFolder = scanTask.RootFolder;
+                }
 
-                totalFileCount++;
+                await foreach (var fileInfo in fileSource)
+                {
+                    pendingFiles.Add(new FileDto
+                    {
+                        FileName = fileInfo.FileName.StartsWith(rootFolder, StringComparison.OrdinalIgnoreCase) ? fileInfo.FileName[(rootFolder.Length + 1)..] : fileInfo.FileName,
+                        Size = fileInfo.Size,
+                        ModifiedTime = fileInfo.ModifiedTime
+                    });
 
-                if (pendingFiles.Count % syncSettings.FileBatchSize == 0)
+                    totalFileCount++;
+
+                    if (pendingFiles.Count % syncSettings.FileBatchSize == 0)
+                    {
+                        await fileStorageProvider.Save(syncSettings, commandOptions.DatabaseConnectionString, totalFileCount, pendingFiles, scanTask.FileMode, logger);
+                        pendingFiles.Clear();
+                    }
+                }
+
+                if (pendingFiles.Count > 0)
                 {
                     await fileStorageProvider.Save(syncSettings, commandOptions.DatabaseConnectionString, totalFileCount, pendingFiles, scanTask.FileMode, logger);
                     pendingFiles.Clear();
                 }
-            }
 
-            if (pendingFiles.Count > 0)
+                switch (scanTask.FileMode)
+                {
+                    case SyncFileMode.Source:
+                        syncReport.SourceFileCount = totalFileCount;
+                        break;
+                    case SyncFileMode.Target:
+                        syncReport.TargetFileCount = totalFileCount;
+                        break;
+                }
+
+                logger.LogInformation("Scanned {FileMode} and found {FileCount} files in {RootFolder}.", scanTask.FileMode, totalFileCount, scanTask.RootFolder);
+            }
+            catch (Exception ex)
             {
-                await fileStorageProvider.Save(syncSettings, commandOptions.DatabaseConnectionString, totalFileCount, pendingFiles, scanTask.FileMode, logger);
-                pendingFiles.Clear();
+                logger.LogError(ex, "Failed to scan files in {RootFolder} beause {ErrorMessage}", scanTask.RootFolder, ex.Message);
             }
-
-            switch (scanTask.FileMode)
-            {
-                case SyncFileMode.Source:
-                    syncReport.SourceFileCount = totalFileCount;
-                    break;
-                case SyncFileMode.Target:
-                    syncReport.TargetFileCount = totalFileCount;
-                    break;
-            }
-
-            logger.LogInformation("Scanned {FileMode} and found {FileCount} files in {RootFolder}.", scanTask.FileMode, totalFileCount, scanTask.RootFolder);
 
             return new ScanResultDto
             {
