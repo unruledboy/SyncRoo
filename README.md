@@ -288,3 +288,4 @@ To use SQL Server Express LocalDB, you can set like below:
 
 ## ToDos
 - Support multithreads for processing different folders parallelly. Currently it only support running multiple batch files concurrently.
+- Support multiple instances. Currently it will not work if you run multiple instances of SyncRoo on the same machine because the server instance will be conflicted due to the database table can only work with 1 root folder a time.
