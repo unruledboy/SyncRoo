@@ -412,8 +412,7 @@ namespace SyncRoo.Core
                 batchContent.AppendLine(string.Join("\r\n", result.Select(x =>
                 {
                     var sourceFile = Path.Combine(sourceFolder, x.FileName);
-                    var targetFile = Path.Combine(targetFolder, x.FileName);
-                    var command = $"XCOPY /S /Q /Y /F \"{sourceFile}\" \"{targetFile}\"";
+                    var command = $"XCOPY /S /Q /Y /F \"{sourceFile}\" \"{targetFolder}\"";
 
                     return command;
                 })));
