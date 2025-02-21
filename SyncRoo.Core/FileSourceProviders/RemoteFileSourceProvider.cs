@@ -36,8 +36,9 @@ namespace SyncRoo.Core.FileSourceProviders
             }
 
             var scanResult = await scanResponseMessage.Content.ReadFromJsonAsync<ScanResultDto>();
+            var runningTotal = 0L;
 
-            logger.LogInformation("Scan found {FileCount} files for {RootFolder} on {RemoteServer}...", scanResult.FileCount, path, server);
+            logger.LogInformation("Scan found {TotalFileCount} files for {RootFolder} on {RemoteServer}...", scanResult.FileCount, path, server);
 
             for (var i = 0; i < scanResult.FileCount / syncSettings.FileBatchSize + 1; i++)
             {
@@ -52,7 +53,9 @@ namespace SyncRoo.Core.FileSourceProviders
 
                 var files = await getResponseMessage.Content.ReadFromJsonAsync<List<FileDto>>();
 
-                logger.LogInformation("Found {FileCount} files for {RootFolder} on {RemoteServer}...", files.Count, path, server);
+                runningTotal += files.Count;
+
+                logger.LogInformation("Found {FileCount} ({RunningTotal}/{TotalFileCount}) files for {RootFolder} on {RemoteServer}...", files.Count, runningTotal, scanResult.FileCount, path, server);
 
                 if (files.Count > 0)
                 {
