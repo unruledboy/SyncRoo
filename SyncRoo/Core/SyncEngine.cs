@@ -408,11 +408,33 @@ namespace SyncRoo.Core
                 }
 
                 var batchContent = new StringBuilder();
+                var uniqueFolderNames = new HashSet<string>();
+
                 batchContent.AppendLine("chcp 65001");
+
+                foreach (var item in result)
+                {
+                    var path = Path.GetDirectoryName(item.FileName);
+                    var relativePath = path[sourceFolder.Length..].Trim(Path.PathSeparator);
+
+                    if (string.IsNullOrWhiteSpace(relativePath))
+                    {
+                        continue;
+                    }
+
+                    var fullPath = Path.Combine(targetFolder, relativePath);
+                    uniqueFolderNames.Add(fullPath);
+                }
+
+                foreach (var item in uniqueFolderNames)
+                {
+                    batchContent.AppendLine($"MKDIR {item}");
+                }
+
                 batchContent.AppendLine(string.Join("\r\n", result.Select(x =>
                 {
                     var sourceFile = Path.Combine(sourceFolder, x.FileName);
-                    var command = $"XCOPY /S /Q /Y /F \"{sourceFile}\" \"{targetFolder}\"";
+                    var command = $"COPY /Y \"{sourceFile}\" \"{targetFolder}\"";
 
                     return command;
                 })));
