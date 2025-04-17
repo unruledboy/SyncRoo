@@ -414,8 +414,7 @@ namespace SyncRoo.Core
 
                 foreach (var item in result)
                 {
-                    var path = Path.GetDirectoryName(item.FileName);
-                    var relativePath = path[sourceFolder.Length..].Trim(Path.PathSeparator);
+                    var relativePath = Path.GetDirectoryName(item.FileName);
 
                     if (string.IsNullOrWhiteSpace(relativePath))
                     {
@@ -434,7 +433,8 @@ namespace SyncRoo.Core
                 batchContent.AppendLine(string.Join("\r\n", result.Select(x =>
                 {
                     var sourceFile = Path.Combine(sourceFolder, x.FileName);
-                    var command = $"COPY /Y \"{sourceFile}\" \"{targetFolder}\"";
+                    var targetFile = Path.Combine(targetFolder, x.FileName);
+                    var command = $"COPY /Y \"{sourceFile}\" \"{targetFile}\"";
 
                     return command;
                 })));
